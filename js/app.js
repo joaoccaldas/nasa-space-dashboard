@@ -24,6 +24,15 @@ const telescopeLoadBtn = document.getElementById('fetchTelescopeImages');
 const telescopeContent = document.getElementById('telescopeContent');
 const telescopeLoading = document.getElementById('telescopeLoading');
 
+// Helper: get today in UTC (YYYY-MM-DD)
+function getTodayUTC() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(now.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // Initialize Application
 function init() {
   // Load saved API key
@@ -36,26 +45,36 @@ function init() {
     showAPIStatus('Using DEMO_KEY (30/hr, 50/day). Add your own key for higher limits.', 'warning');
   }
 
-  // Set defaults for date inputs
-  const today = new Date().toISOString().split('T')[0];
-  const apodMax = today;
+  // Set defaults for date inputs using UTC to avoid timezone issues
+  const todayUTC = getTodayUTC();
+
   if (apodDateInput) {
     apodDateInput.min = APOD_START_DATE;
-    apodDateInput.max = apodMax;
-    if (!apodDateInput.value) apodDateInput.value = apodMax;
+    apodDateInput.max = todayUTC;
+    if (!apodDateInput.value || apodDateInput.value > todayUTC) apodDateInput.value = todayUTC;
   }
 
   const marsDate = document.getElementById('marsDate');
   if (marsDate) {
-    marsDate.max = today;
-    if (!marsDate.value) marsDate.value = today;
+    marsDate.max = todayUTC;
+    if (!marsDate.value || marsDate.value > todayUTC) marsDate.value = todayUTC;
   }
+
   if (telescopeEndDate) {
-    telescopeEndDate.max = today;
-    if (!telescopeEndDate.value) telescopeEndDate.value = today;
+    telescopeEndDate.max = todayUTC;
+    if (!telescopeEndDate.value || telescopeEndDate.value > todayUTC) telescopeEndDate.value = todayUTC;
   }
   if (telescopeStartDate) {
     telescopeStartDate.min = APOD_START_DATE;
+  }
+
+  // Also cap NEO date pickers to today UTC if present
+  const neoStartDate = document.getElementById('neoStartDate');
+  const neoEndDate = document.getElementById('neoEndDate');
+  if (neoStartDate) neoStartDate.max = todayUTC;
+  if (neoEndDate) {
+    neoEndDate.max = todayUTC;
+    if (!neoEndDate.value || neoEndDate.value > todayUTC) neoEndDate.value = todayUTC;
   }
 
   // Set up event listeners
@@ -77,10 +96,12 @@ function setupEventListeners() {
   if (saveApiKeyBtn) {
     saveApiKeyBtn.addEventListener('click', saveAPIKey);
   }
+
   // Tab switching
   tabButtons.forEach(button => {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   });
+
   // APOD controls: change on date change and on button click
   if (apodDateInput) {
     apodDateInput.addEventListener('change', () => loadAPOD(apodDateInput.value));
@@ -88,16 +109,19 @@ function setupEventListeners() {
   if (apodLoadBtn) {
     apodLoadBtn.addEventListener('click', () => loadAPOD(apodDateInput?.value));
   }
+
   // Mars Rover Controls
   const fetchMarsBtn = document.getElementById('fetchMarsPhotos');
   if (fetchMarsBtn) {
     fetchMarsBtn.addEventListener('click', loadMarsPhotos);
   }
+
   // NEO Controls
   const fetchNeoBtn = document.getElementById('fetchNeoData');
   if (fetchNeoBtn) {
     fetchNeoBtn.addEventListener('click', loadNEOData);
   }
+
   // Telescope controls
   if (telescopeLoadBtn) {
     telescopeLoadBtn.addEventListener('click', loadTelescopeImages);
@@ -368,4 +392,3 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
-}
