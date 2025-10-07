@@ -1,8 +1,6 @@
 // NASA API Module - Functions for interacting with NASA's public APIs
 // Best practices from: NASA API Docs, GitHub APOD API, StackOverflow
-
 const NASA_API_BASE_URL = 'https://api.nasa.gov';
-
 // APOD service started on June 16, 1995
 const APOD_START_DATE = '1995-06-16';
 
@@ -54,7 +52,7 @@ function validateAPODDate(date) {
         return { 
             valid: false, 
             date: null, 
-            error: 'Date cannot be in the future. Please use today\'s date or earlier' 
+            error: 'No APOD available for future dates. Please pick a valid date.' 
         };
     }
 
@@ -103,7 +101,7 @@ function parseAPIError(response, data = null) {
             return 'Access forbidden. Your API key may be invalid or suspended. Get a new key at https://api.nasa.gov/';
         
         case 404:
-            return 'No APOD data available for this date. Try a different date';
+            return 'The image does not exist for this date. Please try a different date.';
         
         case 429:
             return 'Rate limit exceeded. DEMO_KEY allows 30 requests/hour, 50/day. Wait a while or get a personal API key at https://api.nasa.gov/ for higher limits';
@@ -173,7 +171,8 @@ export async function fetchAPOD(apiKey, date = '') {
         if (error.message.includes('date') || 
             error.message.includes('API') || 
             error.message.includes('Rate limit') ||
-            error.message.includes('key')) {
+            error.message.includes('key') ||
+            error.message.includes('image')) {
             throw error;
         }
         
