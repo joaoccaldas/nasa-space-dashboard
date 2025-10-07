@@ -185,7 +185,7 @@ export async function fetchAPOD(apiKey, date = '') {
 /**
  * Fetch Mars Rover Photos
  * @param {string} apiKey - NASA API key
- * @param {string} rover - Rover name (curiosity, opportunity, spirit)
+ * @param {string} rover - Rover name (curiosity, opportunity, spirit, perseverance)
  * @param {string} earthDate - Earth date in YYYY-MM-DD format
  * @returns {Promise<object>} Mars rover photos data
  */
