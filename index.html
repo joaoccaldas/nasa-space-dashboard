@@ -1,148 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="CaldaSpace - Interactive web app showcasing NASA APIs including APOD, Mars Rover photos, Near Earth Objects, and telescope imagery" />
-    <title>CaldaSpace - NASA Space Dashboard</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <header>
-      <div class="container">
-        <h1>🚀 CaldaSpace</h1>
-        <p class="subtitle">Explore the cosmos with NASA's public APIs</p>
-        <div class="theme-toggle">
-          <label class="switch">
-            <input type="checkbox" id="themeToggle" />
-            <span class="slider"></span>
-          </label>
-          <span id="themeLabel">Light</span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CaldaSpace - Interactive web app showcasing NASA APIs including APOD, Mars Rover photos, Near Earth Objects, and telescope imagery with MAST integration" />
+  <title>CaldaSpace - NASA Space Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>🚀 CaldaSpace</h1>
+      <p class="subtitle">Explore the cosmos with NASA's public APIs</p>
+      <div class="theme-toggle">
+        <label class="switch">
+          <input type="checkbox" id="themeToggle" />
+          <span class="slider"></span>
+        </label>
+        <span id="themeLabel">Light</span>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <!-- API Key Input Section -->
+    <section class="api-key-section">
+      <h2>Enter Your NASA API Key</h2>
+      <p>
+        Get your free API key at <a href="https://api.nasa.gov/" target="_blank">api.nasa.gov</a>
+      </p>
+      <div class="input-group">
+        <input type="text" id="apiKeyInput" placeholder="Enter your NASA API key" />
+        <button id="saveApiKey">Save Key</button>
+      </div>
+      <p class="api-status" id="apiStatus"></p>
+    </section>
+    <!-- Dashboard Tabs -->
+    <section class="dashboard-tabs">
+      <button class="tab-btn active" data-tab="apod">Picture of the Day</button>
+      <button class="tab-btn" data-tab="telescopes">Telescope Gallery</button>
+      <button class="tab-btn" data-tab="mars">Mars Rover Photos</button>
+      <button class="tab-btn" data-tab="neo">Near Earth Objects</button>
+    </section>
+    <!-- APOD Tab -->
+    <section class="tab-content active" id="apod">
+      <h2>Astronomy Picture of the Day</h2>
+      <div class="apod-controls row">
+        <label> Select Date:
+          <input type="date" id="apodDate" max="" />
+        </label>
+        <button id="fetchApodDate">Load APOD</button>
+      </div>
+      <div class="loading" id="apodLoading">Loading...</div>
+      <div class="content-card" id="apodContent"></div>
+    </section>
+    <!-- Telescope Gallery Tab -->
+    <section class="tab-content" id="telescopes">
+      <h2>Professional Telescope Archive</h2>
+      <p class="section-description">Access imagery from NASA's Mikulski Archive for Space Telescopes (MAST). Explore data from JWST, Hubble, TESS, and other major space observatories.</p>
+      <div class="telescope-controls row">
+        <label>
+          Telescope/Mission:
+          <select id="telescopeSelect">
+            <option value="all">All Missions</option>
+            <option value="JWST">James Webb Space Telescope</option>
+            <option value="HST">Hubble Space Telescope</option>
+            <option value="TESS">Transiting Exoplanet Survey Satellite</option>
+            <option value="KEPLER">Kepler</option>
+            <option value="K2">K2</option>
+            <option value="GALEX">Galaxy Evolution Explorer</option>
+            <option value="SPITZER">Spitzer Space Telescope</option>
+            <option value="WISE">Wide-field Infrared Survey Explorer</option>
+            <option value="WFIRST">Roman Space Telescope</option>
+          </select>
+        </label>
+        <label>
+          View Mode:
+          <select id="viewMode">
+            <option value="gallery">Gallery View</option>
+            <option value="timeline">Timeline View</option>
+            <option value="advanced">Advanced Grid</option>
+          </select>
+        </label>
+        <label>
+          Start Date:
+          <input type="date" id="telescopeStartDate" value="1995-06-16" />
+        </label>
+        <label>
+          End Date:
+          <input type="date" id="telescopeEndDate" />
+        </label>
+        <label>
+          Images to Load:
+          <input type="number" id="imageCount" value="20" min="1" max="100" />
+        </label>
+        <button id="fetchTelescopeImages">Load Images</button>
+      </div>
+      <div class="loading" id="telescopeLoading">Loading...</div>
+      <div class="error-message" id="telescopeError" style="display: none;"></div>
+      <div class="photo-grid" id="telescopeContent"></div>
+    </section>
+    <!-- Mars Rover Tab -->
+    <section class="tab-content" id="mars">
+      <h2>Mars Rover Photos</h2>
+      <div class="mars-controls row">
+        <select id="roverSelect">
+          <option value="curiosity">Curiosity</option>
+          <option value="perseverance">Perseverance</option>
+          <option value="opportunity">Opportunity</option>
+          <option value="spirit">Spirit</option>
+        </select>
+        <input type="date" id="marsDate" max="" />
+        <button id="fetchMarsPhotos">Fetch Photos</button>
+      </div>
+      <div class="loading" id="marsLoading">Loading...</div>
+      <div class="photo-grid" id="marsContent"></div>
+    </section>
+    <!-- NEO Tab -->
+    <section class="tab-content" id="neo">
+      <h2>Near Earth Objects</h2>
+      <div class="neo-controls row">
+        <label> Start Date:
+          <input type="date" id="neoStartDate" />
+        </label>
+        <label> End Date:
+          <input type="date" id="neoEndDate" />
+        </label>
+        <button id="fetchNeoData">Fetch NEO Data</button>
+      </div>
+      <div class="loading" id="neoLoading">Loading...</div>
+      <div class="content-list" id="neoContent"></div>
+    </section>
+  </main>
+  <footer>
+    <div class="container">© 2025 CaldaSpace | Data provided by NASA's Open APIs & MAST Archive</div>
+  </footer>
+
+  <!-- MAST Data Preview Modal -->
+  <div class="modal" id="mastModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">MAST Data Preview</h3>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-tabs">
+          <button class="modal-tab active" data-modal-tab="preview">Image Preview</button>
+          <button class="modal-tab" data-modal-tab="metadata">Metadata</button>
+          <button class="modal-tab" data-modal-tab="fits">FITS Data</button>
+        </div>
+        <div class="modal-tab-content active" id="preview-content">
+          <img id="previewImage" src="" alt="" style="max-width: 100%; height: auto;" />
+        </div>
+        <div class="modal-tab-content" id="metadata-content">
+          <div class="metadata-grid" id="metadataGrid"></div>
+        </div>
+        <div class="modal-tab-content" id="fits-content">
+          <div class="fits-info" id="fitsInfo">
+            <p>FITS (Flexible Image Transport System) data contains astronomical observations with calibrated measurements and metadata.</p>
+            <button id="downloadFits">Download FITS File</button>
+          </div>
         </div>
       </div>
-    </header>
+    </div>
+  </div>
 
-    <main class="container">
-      <!-- API Key Input Section -->
-      <section class="api-key-section">
-        <h2>Enter Your NASA API Key</h2>
-        <p>
-          Get your free API key at <a href="https://api.nasa.gov/" target="_blank">api.nasa.gov</a>
-        </p>
-        <div class="input-group">
-          <input type="text" id="apiKeyInput" placeholder="Enter your NASA API key" />
-          <button id="saveApiKey">Save Key</button>
-        </div>
-        <p class="api-status" id="apiStatus"></p>
-      </section>
+  <script type="module" src="js/app.js"></script>
+  <script>
+    // Light/Dark theme toggle
+    (function () {
+      const toggle = document.getElementById('themeToggle');
+      const label = document.getElementById('themeLabel');
+      const saved = localStorage.getItem('caldaspace_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      if (saved === 'dark') {
+        toggle.checked = true;
+        label.textContent = 'Dark';
+      }
+      toggle?.addEventListener('change', () => {
+        const theme = toggle.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        label.textContent = toggle.checked ? 'Dark' : 'Light';
+        localStorage.setItem('caldaspace_theme', theme);
+      });
+    })();
 
-      <!-- Dashboard Tabs -->
-      <section class="dashboard-tabs">
-        <button class="tab-btn active" data-tab="apod">Picture of the Day</button>
-        <button class="tab-btn" data-tab="telescopes">Telescope Gallery</button>
-        <button class="tab-btn" data-tab="mars">Mars Rover Photos</button>
-        <button class="tab-btn" data-tab="neo">Near Earth Objects</button>
-      </section>
-
-      <!-- APOD Tab -->
-      <section class="tab-content active" id="apod">
-        <h2>Astronomy Picture of the Day</h2>
-        <div class="apod-controls row">
-          <label> Select Date:
-            <input type="date" id="apodDate" max="" />
-          </label>
-          <button id="fetchApodDate">Load APOD</button>
-        </div>
-        <div class="loading" id="apodLoading">Loading...</div>
-        <div class="content-card" id="apodContent"></div>
-      </section>
-
-      <!-- Telescope Gallery Tab -->
-      <section class="tab-content" id="telescopes">
-        <h2>Telescope Image Gallery</h2>
-        <div class="telescope-controls row">
-          <label>
-            View Mode:
-            <select id="viewMode">
-              <option value="gallery">Gallery View</option>
-              <option value="timeline">Timeline View</option>
-            </select>
-          </label>
-          <label>
-            Start Date:
-            <input type="date" id="telescopeStartDate" value="1995-06-16" />
-          </label>
-          <label>
-            End Date:
-            <input type="date" id="telescopeEndDate" />
-          </label>
-          <label>
-            Images to Load:
-            <input type="number" id="imageCount" value="20" min="1" max="100" />
-          </label>
-          <button id="fetchTelescopeImages">Load Images</button>
-        </div>
-        <div class="loading" id="telescopeLoading">Loading...</div>
-        <div class="photo-grid" id="telescopeContent"></div>
-      </section>
-
-      <!-- Mars Rover Tab -->
-      <section class="tab-content" id="mars">
-        <h2>Mars Rover Photos</h2>
-        <div class="mars-controls row">
-          <select id="roverSelect">
-            <option value="curiosity">Curiosity</option>
-            <option value="perseverance">Perseverance</option>
-            <option value="opportunity">Opportunity</option>
-            <option value="spirit">Spirit</option>
-          </select>
-          <input type="date" id="marsDate" max="" />
-          <button id="fetchMarsPhotos">Fetch Photos</button>
-        </div>
-        <div class="loading" id="marsLoading">Loading...</div>
-        <div class="photo-grid" id="marsContent"></div>
-      </section>
-
-      <!-- NEO Tab -->
-      <section class="tab-content" id="neo">
-        <h2>Near Earth Objects</h2>
-        <div class="neo-controls row">
-          <label> Start Date:
-            <input type="date" id="neoStartDate" />
-          </label>
-          <label> End Date:
-            <input type="date" id="neoEndDate" />
-          </label>
-          <button id="fetchNeoData">Fetch NEO Data</button>
-        </div>
-        <div class="loading" id="neoLoading">Loading...</div>
-        <div class="content-list" id="neoContent"></div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="container">© 2025 CaldaSpace | Data provided by NASA's Open APIs</div>
-    </footer>
-
-    <script type="module" src="js/app.js"></script>
-    <script>
-      // Light/Dark theme toggle
-      (function () {
-        const toggle = document.getElementById('themeToggle');
-        const label = document.getElementById('themeLabel');
-        const saved = localStorage.getItem('caldaspace_theme') || 'light';
-        document.documentElement.setAttribute('data-theme', saved);
-        if (saved === 'dark') {
-          toggle.checked = true;
-          label.textContent = 'Dark';
+    // MAST Modal functionality
+    (function() {
+      const modal = document.getElementById('mastModal');
+      const closeModal = document.getElementById('closeModal');
+      const modalTabs = document.querySelectorAll('.modal-tab');
+      const modalTabContents = document.querySelectorAll('.modal-tab-content');
+      
+      // Close modal functionality
+      closeModal?.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      
+      // Close modal on outside click
+      modal?.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
         }
-        toggle?.addEventListener('change', () => {
-          const theme = toggle.checked ? 'dark' : 'light';
-          document.documentElement.setAttribute('data-theme', theme);
-          label.textContent = toggle.checked ? 'Dark' : 'Light';
-          localStorage.setItem('caldaspace_theme', theme);
+      });
+      
+      // Modal tab switching
+      modalTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.dataset.modalTab;
+          
+          // Update active tab
+          modalTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          // Update active content
+          modalTabContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.id === `${targetTab}-content`) {
+              content.classList.add('active');
+            }
+          });
         });
-      })();
-    </script>
-  </body>
+      });
+    })();
+
+    // Enhanced telescope gallery initialization
+    (function() {
+      const telescopeSelect = document.getElementById('telescopeSelect');
+      const viewMode = document.getElementById('viewMode');
+      const telescopeContent = document.getElementById('telescopeContent');
+      const telescopeError = document.getElementById('telescopeError');
+      
+      // Update UI based on view mode
+      viewMode?.addEventListener('change', (e) => {
+        const mode = e.target.value;
+        telescopeContent.className = mode === 'advanced' ? 'photo-grid advanced-grid' : 'photo-grid';
+        
+        if (mode === 'timeline') {
+          telescopeContent.classList.add('timeline-view');
+        } else {
+          telescopeContent.classList.remove('timeline-view');
+        }
+      });
+      
+      // Error handling helper
+      window.showTelescopeError = function(message) {
+        telescopeError.textContent = message;
+        telescopeError.style.display = 'block';
+        setTimeout(() => {
+          telescopeError.style.display = 'none';
+        }, 5000);
+      };
+      
+      // Loading state helper
+      window.setTelescopeLoading = function(isLoading) {
+        const loadingEl = document.getElementById('telescopeLoading');
+        const button = document.getElementById('fetchTelescopeImages');
+        
+        if (isLoading) {
+          loadingEl.style.display = 'block';
+          button.disabled = true;
+          button.textContent = 'Loading...';
+        } else {
+          loadingEl.style.display = 'none';
+          button.disabled = false;
+          button.textContent = 'Load Images';
+        }
+      };
+      
+      // MAST data preview helper
+      window.showMASTPreview = function(imageData) {
+        const modal = document.getElementById('mastModal');
+        const title = document.getElementById('modalTitle');
+        const previewImg = document.getElementById('previewImage');
+        const metadataGrid = document.getElementById('metadataGrid');
+        const fitsInfo = document.getElementById('fitsInfo');
+        
+        title.textContent = imageData.title || 'MAST Archive Image';
+        previewImg.src = imageData.preview_url || imageData.url;
+        previewImg.alt = imageData.title || 'Telescope image';
+        
+        // Populate metadata
+        metadataGrid.innerHTML = '';
+        if (imageData.metadata) {
+          Object.entries(imageData.metadata).forEach(([key, value]) => {
+            const item = document.createElement('div');
+            item.className = 'metadata-item';
+            item.innerHTML = `<strong>${key}:</strong> ${value}`;
+            metadataGrid.appendChild(item);
+          });
+        }
+        
+        // FITS download functionality
+        const downloadBtn = document.getElementById('downloadFits');
+        downloadBtn.onclick = () => {
+          if (imageData.fits_url) {
+            window.open(imageData.fits_url, '_blank');
+          } else {
+            alert('FITS data not available for this image');
+          }
+        };
+        
+        modal.style.display = 'block';
+      };
+    })();
+  </script>
+</body>
 </html>
