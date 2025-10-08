@@ -1,5 +1,5 @@
-// CaldaSpace - Enhanced Main Application Logic
-// Advanced space exploration with clickable source links, 3D visualizations, and comprehensive data
+// CaldaSpace - Ultimate Space Exploration Application
+// Comprehensive integration of NASA, ESA, SpaceX, ISS, and telescope data with 3D visualizations
 
 import { 
     fetchAPOD, 
@@ -19,11 +19,36 @@ import {
 
 import NEO3DVisualizer from './neo3d.js';
 
+import {
+    fetchEnhancedTelescopeData,
+    getAvailableMissions,
+    getTelescopeStats,
+    TELESCOPE_MISSIONS
+} from './telescope.js';
+
+import {
+    fetchNASANews,
+    fetchAggregatedSpaceNews,
+    formatNewsDate,
+    getCategoryEmoji
+} from './news.js';
+
+import {
+    fetchISSData,
+    fetchSpaceXData,
+    fetchESAData,
+    fetchMultiAgencyStatus,
+    createISS3DObject,
+    formatAgencyData
+} from './agencies.js';
+
 // Application state
 let API_KEY = localStorage.getItem('nasa_api_key') || 'DEMO_KEY';
 let neo3DVisualizer = null;
+let currentNewsCategory = 'general';
+let currentTelescope = 'HST';
 
-// DOM Elements - with comprehensive checking
+// DOM Elements
 const apiKeyInput = document.getElementById('apiKeyInput');
 const saveApiKeyBtn = document.getElementById('saveApiKey');
 const testApiKeyBtn = document.getElementById('testApiKey');
@@ -31,19 +56,30 @@ const apiStatus = document.getElementById('apiStatus');
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
+// News elements
+const newsCategory = document.getElementById('newsCategory');
+const refreshNewsBtn = document.getElementById('refreshNews');
+const newsLoading = document.getElementById('newsLoading');
+const newsContent = document.getElementById('newsContent');
+
+// Agency elements
+const agencyLoading = document.getElementById('agencyLoading');
+const agencyStatus = document.getElementById('agencyStatus');
+
 // APOD elements
 const apodDateInput = document.getElementById('apodDate');
 const apodLoadBtn = document.getElementById('fetchApodDate');
 const randomApodBtn = document.getElementById('randomApod');
 
-// Telescope Gallery elements
+// Telescope elements
+const telescopeSelect = document.getElementById('telescopeSelect');
 const telescopeStartDate = document.getElementById('telescopeStartDate');
 const telescopeEndDate = document.getElementById('telescopeEndDate');
 const telescopeImageCount = document.getElementById('imageCount');
 const telescopeViewMode = document.getElementById('viewMode');
 const telescopeLoadBtn = document.getElementById('fetchTelescopeImages');
-const telescopeContent = document.getElementById('telescopeContent');
 const telescopeLoading = document.getElementById('telescopeLoading');
+const telescopeContent = document.getElementById('telescopeContent');
 
 // Mars elements
 const marsLatestBtn = document.getElementById('marsLatestPhotos');
@@ -54,11 +90,10 @@ const showOrbitsCheckbox = document.getElementById('showOrbits');
 const showComet3ICheckbox = document.getElementById('showComet3I');
 const animationSpeedSlider = document.getElementById('animationSpeed');
 const resetViewBtn = document.getElementById('resetView');
-const neoMaxDistanceInput = document.getElementById('neoMaxDistance');
 
-console.log('CaldaSpace: Enhanced application starting...');
+console.log('CaldaSpace: Ultimate Application starting...');
 
-// Helper: get today in UTC (YYYY-MM-DD)
+// Helper functions
 function getTodayUTC() {
     const now = new Date();
     const y = now.getUTCFullYear();
@@ -67,7 +102,6 @@ function getTodayUTC() {
     return `${y}-${m}-${d}`;
 }
 
-// Helper: create clickable image with source attribution
 function createClickableImage(src, alt, sourceLinks, title = '', description = '') {
     return `
         <div class="clickable-image-container">
@@ -109,27 +143,27 @@ window.showImageSource = function(encodedSourceLinks, encodedTitle, encodedDescr
             </a>`;
         }
         
-        if (sourceLinks.original_image) {
-            linksHTML += `<a href="${sourceLinks.original_image}" target="_blank" rel="noopener" class="source-link">
+        if (sourceLinks.original_image || sourceLinks.data_url) {
+            linksHTML += `<a href="${sourceLinks.original_image || sourceLinks.data_url}" target="_blank" rel="noopener" class="source-link">
                 🖼️ Original Image
             </a>`;
         }
         
-        if (sourceLinks.jpl_ssd) {
-            linksHTML += `<a href="${sourceLinks.jpl_ssd}" target="_blank" rel="noopener" class="source-link">
-                🔭 JPL Small-Body Database
+        if (sourceLinks.fits_download) {
+            linksHTML += `<a href="${sourceLinks.fits_download}" target="_blank" rel="noopener" class="source-link">
+                📊 FITS Data Download
             </a>`;
         }
         
-        if (sourceLinks.nasa_api_docs) {
-            linksHTML += `<a href="${sourceLinks.nasa_api_docs}" target="_blank" rel="noopener" class="source-link">
-                📚 NASA API Documentation
+        if (sourceLinks.mast_portal) {
+            linksHTML += `<a href="${sourceLinks.mast_portal}" target="_blank" rel="noopener" class="source-link">
+                🔭 MAST Archive Portal
             </a>`;
         }
         
-        if (sourceLinks.rover_specific) {
-            linksHTML += `<a href="${sourceLinks.rover_specific}" target="_blank" rel="noopener" class="source-link">
-                🤖 Rover Mission Page
+        if (sourceLinks.mission_page) {
+            linksHTML += `<a href="${sourceLinks.mission_page}" target="_blank" rel="noopener" class="source-link">
+                🚀 Mission Homepage
             </a>`;
         }
         
@@ -148,9 +182,137 @@ window.showImageSource = function(encodedSourceLinks, encodedTitle, encodedDescr
     }
 };
 
+// Global function to show news article
+window.showNewsArticle = function(articleData) {
+    try {
+        const modal = document.getElementById('newsModal');
+        const modalTitle = document.getElementById('newsModalTitle');
+        const modalContent = document.getElementById('newsModalContent');
+        
+        modalTitle.textContent = articleData.title;
+        
+        modalContent.innerHTML = `
+            <div class="news-article-content">
+                ${articleData.thumbnail ? `<img src="${articleData.thumbnail}" alt="${articleData.title}" class="news-image" />` : ''}
+                <div class="news-meta">
+                    <span class="news-category">${getCategoryEmoji(articleData.category)} ${articleData.category}</span>
+                    <span class="news-date">${formatNewsDate(articleData.publishDate)}</span>
+                    <span class="news-source">by ${articleData.author || 'NASA'}</span>
+                </div>
+                <div class="news-description">
+                    <p>${articleData.description}</p>
+                </div>
+                <div class="news-actions">
+                    <a href="${articleData.url}" target="_blank" rel="noopener" class="source-link primary">
+                        🔗 Read Full Article
+                    </a>
+                    ${articleData.sourceLinks?.nasa_news ? `
+                        <a href="${articleData.sourceLinks.nasa_news}" target="_blank" rel="noopener" class="source-link">
+                            📰 More NASA News
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error showing news article:', error);
+    }
+};
+
+// Global function to show agency details
+window.showAgencyDetails = function(agencyName, agencyData) {
+    try {
+        const modal = document.getElementById('agencyModal');
+        const modalTitle = document.getElementById('agencyModalTitle');
+        const modalContent = document.getElementById('agencyModalContent');
+        
+        modalTitle.textContent = `${agencyName} Details`;
+        
+        let content = '';
+        
+        if (agencyName === 'ISS') {
+            content = `
+                <div class="agency-details">
+                    <h4>🛰️ International Space Station - Live Data</h4>
+                    <div class="iss-position">
+                        <h5>Current Position</h5>
+                        <p><strong>Latitude:</strong> ${agencyData.position.latitude.toFixed(4)}°</p>
+                        <p><strong>Longitude:</strong> ${agencyData.position.longitude.toFixed(4)}°</p>
+                        <p><strong>Altitude:</strong> ${agencyData.position.altitude} km</p>
+                        <p><strong>Velocity:</strong> ${agencyData.velocity.toLocaleString()} km/h</p>
+                    </div>
+                    <div class="iss-crew">
+                        <h5>Current Crew (${agencyData.crew.length} people)</h5>
+                        ${agencyData.crew.map(person => `<p>• ${person.name}</p>`).join('')}
+                    </div>
+                    <div class="iss-links">
+                        <a href="${agencyData.sourceLinks.iss_tracker}" target="_blank" class="source-link">📹 NASA Live Stream</a>
+                        <a href="${agencyData.sourceLinks.crew_info}" target="_blank" class="source-link">👨‍🚀 Crew Information</a>
+                    </div>
+                </div>
+            `;
+        } else if (agencyName === 'SpaceX') {
+            content = `
+                <div class="agency-details">
+                    <h4>🚀 SpaceX Recent Activity</h4>
+                    <div class="spacex-company">
+                        <h5>Company Information</h5>
+                        <p><strong>Founded:</strong> ${agencyData.company.founded}</p>
+                        <p><strong>Founder:</strong> ${agencyData.company.founder}</p>
+                        <p><strong>Employees:</strong> ${agencyData.company.employees.toLocaleString()}</p>
+                        <p><strong>Valuation:</strong> $${(agencyData.company.valuation / 1e9).toFixed(1)}B</p>
+                    </div>
+                    <div class="spacex-launches">
+                        <h5>Recent Launches</h5>
+                        ${agencyData.recentLaunches.slice(0, 3).map(launch => `
+                            <div class="launch-item">
+                                <p><strong>${launch.name}</strong></p>
+                                <p>Rocket: ${launch.rocket} | ${launch.success ? '✅ Success' : '❌ Failed'}</p>
+                                <p>Date: ${new Date(launch.date).toLocaleDateString()}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="spacex-links">
+                        <a href="${agencyData.sourceLinks.spacex_main}" target="_blank" class="source-link">🚀 SpaceX Website</a>
+                    </div>
+                </div>
+            `;
+        } else if (agencyName === 'ESA') {
+            content = `
+                <div class="agency-details">
+                    <h4>🌍 European Space Agency Missions</h4>
+                    <div class="esa-missions">
+                        <h5>Active Missions (${agencyData.activeMissions.length})</h5>
+                        ${agencyData.activeMissions.slice(0, 5).map(mission => `
+                            <div class="mission-item">
+                                <p><strong>${mission.name}</strong> (${mission.status})</p>
+                                <p>${mission.description}</p>
+                                <p>Type: ${mission.missionType} | Launched: ${mission.launchDate}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="esa-links">
+                        <a href="${agencyData.sourceLinks.esa_main}" target="_blank" class="source-link">🌍 ESA Website</a>
+                        <a href="${agencyData.sourceLinks.science_missions}" target="_blank" class="source-link">🔭 Science Missions</a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        modalContent.innerHTML = content;
+        modal.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error showing agency details:', error);
+    }
+};
+
 // Initialize Application
 function init() {
-    console.log('CaldaSpace: Initializing enhanced application...');
+    console.log('CaldaSpace: Initializing ultimate application...');
     
     try {
         // Load saved API key
@@ -158,7 +320,7 @@ function init() {
             apiKeyInput.value = API_KEY;
         }
 
-        // Show API status
+        // Show initial API status
         if (API_KEY === 'DEMO_KEY') {
             showAPIStatus('Using DEMO_KEY (30/hr, 50/day). Add your own key for higher limits.', 'warning');
         }
@@ -169,32 +331,23 @@ function init() {
         // Set up event listeners
         setupEventListeners();
 
-        // Initialize 3D visualizer
-        if (document.getElementById('neo3DCanvas')) {
-            setTimeout(() => {
-                neo3DVisualizer = new NEO3DVisualizer('neo3DCanvas');
-                setup3DControls();
-            }, 100);
-        }
-
-        // Test API in background
-        setTimeout(async () => {
+        // Initialize 3D visualizer with better error handling
+        setTimeout(() => {
             try {
-                const test = await testAPIConnection(API_KEY);
-                if (test.success) {
-                    showAPIStatus(`Connected to NASA API (${test.responseTime}ms)`, 'success');
-                } else {
-                    showAPIStatus(`API check: ${test.message}`, 'warning');
+                if (document.getElementById('neo3DCanvas')) {
+                    console.log('Initializing 3D NEO Visualizer...');
+                    neo3DVisualizer = new NEO3DVisualizer('neo3DCanvas');
+                    setup3DControls();
                 }
             } catch (error) {
-                console.error('API test failed:', error);
+                console.error('3D Visualizer initialization failed:', error);
             }
         }, 500);
 
-        // Load initial content with latest dates
+        // Load initial content
         loadInitialContent();
         
-        console.log('CaldaSpace: Enhanced initialization complete');
+        console.log('CaldaSpace: Ultimate initialization complete');
     } catch (error) {
         console.error('CaldaSpace: Initialization error:', error);
         showAPIStatus('Application initialization failed. Please refresh the page.', 'error');
@@ -206,14 +359,14 @@ function setupDefaultDates() {
     const latestAPOD = getLatestAPODDate();
     const latestMars = getLatestMarsDate();
     
-    // APOD date - set to latest available
+    // APOD date
     if (apodDateInput) {
         apodDateInput.min = APOD_START_DATE;
         apodDateInput.max = latestAPOD;
         apodDateInput.value = latestAPOD;
     }
 
-    // Mars date - set to latest available with data
+    // Mars date
     const marsDate = document.getElementById('marsDate');
     if (marsDate) {
         marsDate.max = latestMars;
@@ -226,15 +379,13 @@ function setupDefaultDates() {
         telescopeEndDate.value = latestAPOD;
     }
     if (telescopeStartDate) {
-        telescopeStartDate.min = APOD_START_DATE;
-        // Set start date to 30 days ago for good range
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
         const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
         telescopeStartDate.value = startDateStr;
     }
 
-    // NEO dates - set to last 7 days for good data
+    // NEO dates
     const neoStartDate = document.getElementById('neoStartDate');
     const neoEndDate = document.getElementById('neoEndDate');
     if (neoStartDate && neoEndDate) {
@@ -242,16 +393,20 @@ function setupDefaultDates() {
         sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
         neoStartDate.value = sevenDaysAgo.toISOString().split('T')[0];
         neoEndDate.value = todayUTC;
-        neoStartDate.max = todayUTC;
-        neoEndDate.max = todayUTC;
     }
 }
 
 function loadInitialContent() {
     // Load today's APOD by default
     if (apodDateInput?.value) {
-        loadAPOD(apodDateInput.value);
+        setTimeout(() => loadAPOD(apodDateInput.value), 1000);
     }
+    
+    // Load latest space news
+    setTimeout(() => loadNews('general'), 1500);
+    
+    // Load multi-agency status
+    setTimeout(() => loadAgencyStatus(), 2000);
 }
 
 function setupEventListeners() {
@@ -271,6 +426,17 @@ function setupEventListeners() {
             button.addEventListener('click', () => switchTab(button.dataset.tab));
         });
 
+        // News controls
+        if (newsCategory) {
+            newsCategory.addEventListener('change', (e) => {
+                currentNewsCategory = e.target.value;
+                loadNews(currentNewsCategory);
+            });
+        }
+        if (refreshNewsBtn) {
+            refreshNewsBtn.addEventListener('click', () => loadNews(currentNewsCategory));
+        }
+
         // APOD controls
         if (apodDateInput) {
             apodDateInput.addEventListener('change', () => {
@@ -279,15 +445,18 @@ function setupEventListeners() {
                 }
             });
         }
-        if (apodLoadBtn) {
-            apodLoadBtn.addEventListener('click', () => {
-                if (apodDateInput?.value) {
-                    loadAPOD(apodDateInput.value);
-                }
-            });
-        }
         if (randomApodBtn) {
             randomApodBtn.addEventListener('click', loadRandomAPOD);
+        }
+
+        // Telescope controls
+        if (telescopeSelect) {
+            telescopeSelect.addEventListener('change', (e) => {
+                currentTelescope = e.target.value;
+            });
+        }
+        if (telescopeLoadBtn) {
+            telescopeLoadBtn.addEventListener('click', loadTelescopeImages);
         }
 
         // Mars Rover Controls
@@ -304,11 +473,6 @@ function setupEventListeners() {
         if (fetchNeoBtn) {
             fetchNeoBtn.addEventListener('click', loadNEOData);
         }
-
-        // Telescope controls
-        if (telescopeLoadBtn) {
-            telescopeLoadBtn.addEventListener('click', loadTelescopeImages);
-        }
         
         console.log('CaldaSpace: Enhanced event listeners set up successfully');
     } catch (error) {
@@ -319,7 +483,6 @@ function setupEventListeners() {
 function setup3DControls() {
     if (!neo3DVisualizer) return;
     
-    // 3D visualization controls
     if (show3DCheckbox) {
         show3DCheckbox.addEventListener('change', (e) => {
             const canvas = document.getElementById('neo3DCanvas');
@@ -348,7 +511,6 @@ function setup3DControls() {
                     neo3DVisualizer.addCometTrajectory(cometData);
                 } catch (error) {
                     console.error('Error loading comet data:', error);
-                    showAPIStatus('Error loading comet trajectory data', 'error');
                 }
             } else {
                 neo3DVisualizer.toggleComet(false);
@@ -377,16 +539,12 @@ async function saveAPIKey() {
             API_KEY = key;
             localStorage.setItem('nasa_api_key', key);
             showAPIStatus('API Key saved! Testing connection...', 'success');
-            
-            // Test the new key
             setTimeout(() => testAPIKey(), 500);
-            
-            console.log('CaldaSpace: API key saved');
         } else {
             showAPIStatus('Please enter a valid API key', 'error');
         }
     } catch (error) {
-        console.error('CaldaSpace: Error saving API key:', error);
+        console.error('Error saving API key:', error);
         showAPIStatus('Error saving API key', 'error');
     }
 }
@@ -419,22 +577,19 @@ function showAPIStatus(message, type) {
 
 function switchTab(tabName) {
     try {
-        console.log(`CaldaSpace: Switching to tab: ${tabName}`);
+        console.log(`Switching to tab: ${tabName}`);
         
-        // Hide all tabs and remove active class
         tabContents.forEach(content => content.classList.remove('active'));
         tabButtons.forEach(button => button.classList.remove('active'));
         
-        // Show selected tab and activate button
         const selectedTab = document.getElementById(tabName);
         const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
         
         if (selectedTab) selectedTab.classList.add('active');
         if (activeButton) activeButton.classList.add('active');
         
-        // Load default content for specific tabs
+        // Auto-load content for specific tabs
         if (tabName === 'neo' && neo3DVisualizer) {
-            // Auto-load NEO data when switching to 3D tab
             setTimeout(() => {
                 const fetchNeoBtn = document.getElementById('fetchNeoData');
                 if (fetchNeoBtn) fetchNeoBtn.click();
@@ -442,49 +597,155 @@ function switchTab(tabName) {
         }
         
     } catch (error) {
-        console.error('CaldaSpace: Error switching tabs:', error);
+        console.error('Error switching tabs:', error);
     }
 }
 
-// Enhanced APOD loading with clickable images
+// Enhanced news loading
+async function loadNews(category) {
+    if (!newsLoading || !newsContent) return;
+    
+    console.log(`Loading ${category} news...`);
+    
+    try {
+        newsLoading.classList.add('show');
+        newsContent.innerHTML = '';
+        
+        const articles = await fetchAggregatedSpaceNews(12);
+        
+        newsLoading.classList.remove('show');
+        
+        if (articles && articles.length > 0) {
+            displayNewsGrid(articles);
+        } else {
+            newsContent.innerHTML = '<div class="no-data">No news articles available at the moment.</div>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading news:', error);
+        newsLoading.classList.remove('show');
+        newsContent.innerHTML = `<div class="error-message">Error loading news: ${error.message}</div>`;
+    }
+}
+
+function displayNewsGrid(articles) {
+    if (!newsContent) return;
+    
+    newsContent.innerHTML = articles.map(article => `
+        <div class="news-card" onclick="showNewsArticle(${encodeURIComponent(JSON.stringify(article))})" style="cursor: pointer;">
+            <div class="news-image">
+                <img src="${article.thumbnail}" alt="${article.title}" loading="lazy" />
+                <div class="news-category-badge">
+                    ${getCategoryEmoji(article.category)} ${article.category}
+                </div>
+            </div>
+            <div class="news-content">
+                <h3 class="news-title">${article.title}</h3>
+                <p class="news-description">${article.description.substring(0, 150)}...</p>
+                <div class="news-meta">
+                    <span class="news-date">${formatNewsDate(article.publishDate)}</span>
+                    <span class="news-source">by ${article.author}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Enhanced agency status loading
+async function loadAgencyStatus() {
+    if (!agencyLoading || !agencyStatus) return;
+    
+    console.log('Loading multi-agency status...');
+    
+    try {
+        agencyLoading.style.display = 'block';
+        agencyStatus.innerHTML = '';
+        
+        const agencyData = await fetchMultiAgencyStatus();
+        
+        agencyLoading.style.display = 'none';
+        
+        if (agencyData && !agencyData.error) {
+            displayAgencyStatus(agencyData);
+            
+            // Add ISS to 3D visualization if available
+            if (neo3DVisualizer && agencyData.iss) {
+                const iss3DObject = createISS3DObject(agencyData.iss);
+                // This would need to be implemented in the 3D visualizer
+            }
+        } else {
+            agencyStatus.innerHTML = '<div class="error-message">Unable to load agency status data</div>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading agency status:', error);
+        agencyLoading.style.display = 'none';
+        agencyStatus.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+    }
+}
+
+function displayAgencyStatus(data) {
+    if (!agencyStatus) return;
+    
+    const agencies = [
+        { name: 'ISS', data: data.iss, icon: '🛰️' },
+        { name: 'SpaceX', data: data.spacex, icon: '🚀' },
+        { name: 'ESA', data: data.esa, icon: '🌍' }
+    ];
+    
+    agencyStatus.innerHTML = agencies.map(agency => {
+        if (!agency.data) return '';
+        
+        const formatted = formatAgencyData(agency.data, agency.name);
+        
+        return `
+            <div class="agency-card" onclick="showAgencyDetails('${agency.name}', ${encodeURIComponent(JSON.stringify(agency.data))})" 
+                 style="cursor: pointer;">
+                <div class="agency-header">
+                    <span class="agency-icon">${agency.icon}</span>
+                    <h3>${formatted.title}</h3>
+                </div>
+                <div class="agency-content">
+                    <p class="agency-subtitle">${formatted.subtitle}</p>
+                    <div class="agency-details">
+                        ${formatted.details.slice(0, 3).map(detail => `<div>${detail}</div>`).join('')}
+                    </div>
+                    <div class="agency-status">
+                        <span class="status-indicator ${formatted.status.toLowerCase()}"></span>
+                        Status: ${formatted.status}
+                    </div>
+                </div>
+                <div class="agency-footer">
+                    <small>Last updated: ${formatted.lastUpdate}</small>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Enhanced APOD loading (keep existing function but with better error handling)
 async function loadAPOD(date) {
     const loading = document.getElementById('apodLoading');
     const content = document.getElementById('apodContent');
     
-    if (!loading || !content) {
-        console.error('CaldaSpace: APOD elements not found');
-        return;
-    }
+    if (!loading || !content) return;
 
-    console.log(`CaldaSpace: Loading APOD for date: ${date}`);
-
-    const keyValidation = validateAPIKey(API_KEY);
-    if (!keyValidation.valid) {
-        content.innerHTML = `<div class="error-message">${keyValidation.warning}</div>`;
-        return;
-    }
-
-    const { valid, date: cleanDate, error } = validateAPODDate(date);
-    if (!valid) {
-        content.innerHTML = `<div class="error-message">Error: ${error}</div>`;
-        return;
-    }
+    console.log(`Loading APOD for date: ${date}`);
 
     try {
         loading.classList.add('show');
         content.innerHTML = '';
         
-        const data = await fetchAPOD(API_KEY, cleanDate || '');
+        const data = await fetchAPOD(API_KEY, date);
         loading.classList.remove('show');
         
         if (data) {
             displayEnhancedAPOD(data);
-            console.log('CaldaSpace: APOD loaded successfully');
         } else {
             content.innerHTML = '<div class="error-message">Failed to load APOD data. Please check your API key.</div>';
         }
     } catch (error) {
-        console.error('CaldaSpace: Error loading APOD:', error);
+        console.error('Error loading APOD:', error);
         loading.classList.remove('show');
         content.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
     }
@@ -495,7 +756,6 @@ async function loadRandomAPOD() {
         showAPIStatus('Loading random APOD...', 'warning');
         const data = await fetchRandomAPOD(API_KEY);
         
-        // Update date input to match random APOD
         if (apodDateInput && data.date) {
             apodDateInput.value = data.date;
         }
@@ -556,17 +816,86 @@ function displayEnhancedAPOD(data) {
     `;
 }
 
-// Enhanced Mars photos loading
+// Enhanced telescope loading
+async function loadTelescopeImages() {
+    if (!telescopeContent || !telescopeLoading) return;
+    
+    const start = telescopeStartDate?.value;
+    const end = telescopeEndDate?.value;
+    const count = Math.min(Math.max(parseInt(telescopeImageCount?.value || '25', 10), 1), 100);
+    const mode = telescopeViewMode?.value || 'gallery';
+    
+    console.log(`Loading ${count} ${currentTelescope} images from ${start} to ${end} in ${mode} mode`);
+    
+    try {
+        telescopeLoading.classList.add('show');
+        telescopeContent.innerHTML = '';
+        
+        const telescopeData = await fetchEnhancedTelescopeData({
+            mission: currentTelescope,
+            startDate: start,
+            endDate: end,
+            count: count
+        });
+        
+        telescopeLoading.classList.remove('show');
+        
+        if (telescopeData && telescopeData.length > 0) {
+            displayEnhancedTelescopeImages(telescopeData, mode);
+        } else {
+            telescopeContent.innerHTML = '<div class="no-data">No telescope images found for the selected criteria.</div>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading telescope images:', error);
+        telescopeLoading.classList.remove('show');
+        telescopeContent.innerHTML = `<div class="error-message">Error loading images: ${error.message}</div>`;
+    }
+}
+
+function displayEnhancedTelescopeImages(items, mode) {
+    if (!telescopeContent) return;
+    
+    if (mode === 'timeline') {
+        items.sort((a, b) => new Date(a.observation_date) - new Date(b.observation_date));
+        telescopeContent.className = 'photo-grid timeline-view';
+        telescopeContent.innerHTML = items.map(item => `
+            <div class="content-card timeline-item">
+                <div class="timeline-date">${item.observation_date} — ${item.title}</div>
+                ${createClickableImage(item.preview_url, item.title, item.sourceLinks, item.title, Object.entries(item.metadata).slice(0, 3).map(([k,v]) => `${k}: ${v}`).join(' | '))}
+                <div class="telescope-metadata">
+                    <p><strong>Mission:</strong> ${item.mission} | <strong>Instrument:</strong> ${item.instrument}</p>
+                    <p><strong>Target:</strong> ${item.target}</p>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        telescopeContent.className = mode === 'advanced' ? 'photo-grid advanced-grid' : 'photo-grid';
+        telescopeContent.innerHTML = items.map(item => `
+            <div class="photo-item enhanced telescope-item">
+                ${createClickableImage(item.preview_url, item.title, item.sourceLinks, item.title, `${item.mission} observation of ${item.target}`)}
+                <div class="photo-info">
+                    <div class="photo-title">${item.title}</div>
+                    <div class="photo-details">
+                        <div><strong>Mission:</strong> ${item.mission}</div>
+                        <div><strong>Instrument:</strong> ${item.instrument}</div>
+                        <div><strong>Date:</strong> ${item.observation_date}</div>
+                        <div><strong>Target:</strong> ${item.target}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+// Mars photos and NEO functions (keeping existing enhanced versions)
 async function loadMarsPhotos() {
     const loading = document.getElementById('marsLoading');
     const content = document.getElementById('marsContent');
     const roverSelect = document.getElementById('roverSelect');
     const marsDate = document.getElementById('marsDate');
     
-    if (!loading || !content || !roverSelect || !marsDate) {
-        console.error('CaldaSpace: Mars elements not found');
-        return;
-    }
+    if (!loading || !content || !roverSelect || !marsDate) return;
 
     const rover = roverSelect.value;
     const date = marsDate.value;
@@ -576,7 +905,7 @@ async function loadMarsPhotos() {
         return;
     }
 
-    console.log(`CaldaSpace: Loading Mars photos for ${rover} on ${date}`);
+    console.log(`Loading Mars photos for ${rover} on ${date}`);
 
     try {
         loading.classList.add('show');
@@ -587,12 +916,11 @@ async function loadMarsPhotos() {
         
         if (data && data.photos && data.photos.length > 0) {
             displayEnhancedMarsPhotos(data.photos);
-            console.log(`CaldaSpace: Loaded ${data.photos.length} Mars photos`);
         } else {
             content.innerHTML = '<div class="no-data">No photos found for this date. Try the "Latest Photos" button or select a different date.</div>';
         }
     } catch (error) {
-        console.error('CaldaSpace: Error loading Mars photos:', error);
+        console.error('Error loading Mars photos:', error);
         loading.classList.remove('show');
         content.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
     }
@@ -666,10 +994,7 @@ async function loadNEOData() {
     const startDate = document.getElementById('neoStartDate');
     const endDate = document.getElementById('neoEndDate');
     
-    if (!loading || !content || !startDate || !endDate) {
-        console.error('CaldaSpace: NEO elements not found');
-        return;
-    }
+    if (!loading || !content || !startDate || !endDate) return;
 
     const start = startDate.value;
     const end = endDate.value;
@@ -679,7 +1004,7 @@ async function loadNEOData() {
         return;
     }
 
-    console.log(`CaldaSpace: Loading NEO data from ${start} to ${end}`);
+    console.log(`Loading NEO data from ${start} to ${end}`);
 
     try {
         loading.classList.add('show');
@@ -697,12 +1022,12 @@ async function loadNEOData() {
                 neo3DVisualizer.addNEOData(data);
             }
             
-            console.log('CaldaSpace: NEO data loaded successfully');
+            console.log('NEO data loaded successfully');
         } else {
             content.innerHTML = '<div class="no-data">No NEO data found for this date range.</div>';
         }
     } catch (error) {
-        console.error('CaldaSpace: Error loading NEO data:', error);
+        console.error('Error loading NEO data:', error);
         loading.classList.remove('show');
         content.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
     }
@@ -799,95 +1124,9 @@ function displayEnhancedNEOData(neoData, fullData) {
     content.innerHTML = html || '<div class="no-data">No objects found.</div>';
 }
 
-// Enhanced telescope images with metadata
-async function loadTelescopeImages() {
-    if (!telescopeContent || !telescopeLoading) {
-        console.error('CaldaSpace: Telescope elements not found');
-        return;
-    }
-    
-    const start = telescopeStartDate?.value || APOD_START_DATE;
-    const end = telescopeEndDate?.value;
-    const count = Math.min(Math.max(parseInt(telescopeImageCount?.value || '25', 10), 1), 100);
-    const mode = telescopeViewMode?.value || 'gallery';
-    
-    console.log(`CaldaSpace: Loading ${count} telescope images from ${start} to ${end} in ${mode} mode`);
-    
-    try {
-        telescopeLoading.classList.add('show');
-        telescopeContent.innerHTML = '';
-        
-        let items = [];
-        
-        if (start && end) {
-            const params = { start_date: start, end_date: end, thumbs: true };
-            const apods = await fetchNASAAPI('/planetary/apod', API_KEY, params);
-            items = Array.isArray(apods) ? apods.filter(i => i.media_type === 'image') : [];
-            items = items.slice(0, count);
-        } else {
-            const apods = await fetchNASAAPI('/planetary/apod', API_KEY, { count, thumbs: true });
-            items = Array.isArray(apods) ? apods.filter(i => i.media_type === 'image') : [];
-        }
-        
-        telescopeLoading.classList.remove('show');
-        
-        if (!items.length) {
-            telescopeContent.innerHTML = '<div class="no-data">No telescope images found for the selected range.</div>';
-            return;
-        }
-        
-        displayEnhancedTelescopeImages(items, mode);
-        
-        console.log(`CaldaSpace: Loaded ${items.length} telescope images in ${mode} mode`);
-        
-    } catch (error) {
-        console.error('CaldaSpace: Error loading telescope images:', error);
-        telescopeLoading.classList.remove('show');
-        telescopeContent.innerHTML = `<div class="error-message">Error loading images: ${error.message}</div>`;
-    }
-}
-
-function displayEnhancedTelescopeImages(items, mode) {
-    if (!telescopeContent) return;
-    
-    // Add source links to items
-    const enhancedItems = items.map(item => ({
-        ...item,
-        sourceLinks: {
-            original_page: `https://apod.nasa.gov/apod/ap${item.date.replace(/-/g, '').substring(2)}.html`,
-            hd_image: item.hdurl || item.url,
-            nasa_apod: 'https://apod.nasa.gov/apod/',
-            nasa_api_docs: 'https://api.nasa.gov/#apod'
-        }
-    }));
-    
-    if (mode === 'timeline') {
-        enhancedItems.sort((a, b) => new Date(a.date) - new Date(b.date));
-        telescopeContent.innerHTML = enhancedItems.map(item => `
-            <div class="content-card timeline-item">
-                <div class="timeline-date">${item.date} — ${item.title}</div>
-                ${createClickableImage(item.url, item.title, item.sourceLinks, item.title, item.explanation?.substring(0, 150) + '...')}
-                ${item.explanation ? `<p class="timeline-desc">${item.explanation.substring(0, 200)}...</p>` : ''}
-            </div>
-        `).join('');
-    } else {
-        telescopeContent.innerHTML = enhancedItems.map(item => `
-            <div class="photo-item enhanced telescope-item">
-                ${createClickableImage(item.url, item.title, item.sourceLinks, item.title, item.explanation?.substring(0, 100) + '...')}
-                <div class="photo-info">
-                    <div class="photo-title">${item.title}</div>
-                    <div class="photo-date">${item.date}</div>
-                    ${item.copyright ? `<div class="photo-credit">© ${item.copyright}</div>` : ''}
-                </div>
-            </div>
-        `).join('');
-    }
-}
-
 // Global helper for 3D NEO selection
 window.selectNEOIn3D = function(neoId) {
     if (neo3DVisualizer) {
-        // Find NEO in 3D scene and select it
         const neoObj = neo3DVisualizer.neoObjects.find(obj => obj.data.id === neoId);
         if (neoObj) {
             neo3DVisualizer.selectNEO(neoObj);
@@ -910,7 +1149,7 @@ window.addEventListener('error', (event) => {
 // Performance monitoring
 window.addEventListener('load', () => {
     const loadTime = performance.now();
-    console.log(`CaldaSpace: Application loaded in ${loadTime.toFixed(2)}ms`);
+    console.log(`CaldaSpace: Ultimate application loaded in ${loadTime.toFixed(2)}ms`);
 });
 
-console.log('CaldaSpace: Enhanced module loaded successfully');
+console.log('CaldaSpace: Ultimate module loaded successfully');
