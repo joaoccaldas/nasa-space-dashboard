@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="CaldaSpace - The ultimate space exploration dashboard with real-time ISS tracking, NASA news, 3D NEO visualization, telescope images, Mars rover photos, and multi-agency space data" />
-  <title>CaldaSpace - Ultimate Space Exploration Dashboard</title>
+  <meta name="description" content="CaldaSpace - The ultimate space exploration dashboard with revolutionary features: exoplanet discovery games, solar weather alerts, Mars 3D reconstruction, launch optimization, and comet tracking" />
+  <title>CaldaSpace - Revolutionary Space Exploration Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <!-- Three.js for 3D visualizations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+  <!-- OrbitControls for 3D navigation -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
   <header>
@@ -16,7 +18,7 @@
       <div class="header-content">
         <div class="branding">
           <h1>🚀 CaldaSpace</h1>
-          <p class="subtitle">Ultimate space exploration dashboard with real-time data, 3D visualizations, and comprehensive NASA/ESA/SpaceX integration</p>
+          <p class="subtitle">Revolutionary space exploration dashboard with AI-powered features, real-time alerts, 3D reconstruction, and citizen science</p>
         </div>
         <div class="theme-toggle">
           <label class="switch">
@@ -42,6 +44,40 @@
         <button id="testApiKey">Test Connection</button>
       </div>
       <p class="api-status" id="apiStatus"></p>
+    </section>
+
+    <!-- Revolutionary Features Alert -->
+    <section class="revolutionary-features-alert">
+      <div class="alert-content">
+        <h2>🎆 NEW Revolutionary Features Added!</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feature-icon">🎮</span>
+            <h3>Exoplanet Discovery Game</h3>
+            <p>Real citizen science - help discover exoplanets using real NASA data!</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">⚡</span>
+            <h3>Solar Weather Alerts</h3>
+            <p>Critical infrastructure alerts for satellites, GPS, and power grids</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🔴</span>
+            <h3>Mars 3D Reconstruction</h3>
+            <p>Multi-mission 3D Mars terrain from rover imagery</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🚀</span>
+            <h3>Launch Optimizer</h3>
+            <p>Calculate optimal launch windows for any space mission</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">☄️</span>
+            <h3>Comet 3I/Atlas Tracker</h3>
+            <p>Real-time tracking of the interstellar comet with observation planning</p>
+          </div>
+        </div>
+      </div>
     </section>
     
     <!-- Latest Space News Section -->
@@ -75,10 +111,33 @@
         <div class="loading" id="agencyLoading">Loading agency status...</div>
       </div>
     </section>
+
+    <!-- Solar Weather Alert System -->
+    <section class="solar-weather-section">
+      <h2>⚡ Solar Weather Impact Predictor</h2>
+      <p class="section-description">
+        Critical space weather alerts affecting satellites, GPS, power grids, and communications.
+      </p>
+      <div class="weather-controls">
+        <button id="fetchWeatherData">Update Space Weather</button>
+        <button id="showWeatherForecast">3-Day Forecast</button>
+        <button id="exportWeatherAlerts">Export Alerts</button>
+      </div>
+      <div class="loading" id="weatherLoading" style="display: none;">Loading space weather data...</div>
+      <div class="weather-dashboard" id="weatherContent">
+        <div class="weather-summary" id="weatherSummary"></div>
+        <div class="infrastructure-impacts" id="infrastructureImpacts"></div>
+        <div class="weather-alerts" id="weatherAlerts"></div>
+      </div>
+    </section>
     
-    <!-- Dashboard Tabs -->
+    <!-- Revolutionary Dashboard Tabs -->
     <section class="dashboard-tabs">
       <button class="tab-btn active" data-tab="apod">Picture of the Day</button>
+      <button class="tab-btn" data-tab="exoplanet-game">Exoplanet Discovery Game</button>
+      <button class="tab-btn" data-tab="mars-3d">Mars 3D Reconstruction</button>
+      <button class="tab-btn" data-tab="launch-optimizer">Launch Optimizer</button>
+      <button class="tab-btn" data-tab="comet-tracker">Comet 3I/Atlas Tracker</button>
       <button class="tab-btn" data-tab="telescopes">Telescope Gallery</button>
       <button class="tab-btn" data-tab="mars">Mars Rover Photos</button>
       <button class="tab-btn" data-tab="neo">Near Earth Objects 3D</button>
@@ -86,7 +145,7 @@
     
     <!-- APOD Tab -->
     <section class="tab-content active" id="apod">
-      <h2>🖼️ Astronomy Picture of the Day</h2>
+      <h2>🇺️ Astronomy Picture of the Day</h2>
       <p class="section-description">
         🔗 <strong>Click on any image</strong> to visit the original NASA source page with full details and high-resolution downloads.
       </p>
@@ -99,6 +158,274 @@
       </div>
       <div class="loading" id="apodLoading">Loading amazing space imagery...</div>
       <div class="content-card" id="apodContent"></div>
+    </section>
+
+    <!-- Exoplanet Discovery Game Tab -->
+    <section class="tab-content" id="exoplanet-game">
+      <h2>🎮 Exoplanet Discovery Gamification Engine</h2>
+      <p class="section-description">
+        🎆 <strong>Revolutionary citizen science!</strong> Help discover real exoplanets by analyzing actual NASA transit data. Your discoveries contribute to real astronomical research.
+      </p>
+      
+      <div class="game-controls">
+        <div class="game-stats">
+          <div class="stat-card">
+            <span class="stat-number" id="gameScore">0</span>
+            <span class="stat-label">Score</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="planetsDiscovered">0</span>
+            <span class="stat-label">Planets Discovered</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="accuracyRate">100%</span>
+            <span class="stat-label">Accuracy</span>
+          </div>
+        </div>
+        
+        <div class="game-buttons">
+          <button id="startExoplanetGame" class="btn btn-primary">🎮 Start New Round</button>
+          <button id="pauseGame" class="btn btn-secondary">Pause</button>
+          <button id="exportDiscoveries" class="btn btn-accent">Export Discoveries</button>
+        </div>
+        
+        <div class="difficulty-selector">
+          <label>Difficulty:</label>
+          <select id="gameDifficulty">
+            <option value="beginner">Beginner - Clear transits</option>
+            <option value="intermediate">Intermediate - Moderate noise</option>
+            <option value="expert">Expert - Real data noise</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="game-canvas-container">
+        <canvas id="exoplanetGameCanvas" width="800" height="400"></canvas>
+        <div class="game-instructions">
+          <h4>How to Play:</h4>
+          <ol>
+            <li>Watch the light curve for periodic dimming (transits)</li>
+            <li>Click on the curve where you see a transit</li>
+            <li>Earn points for correct detections!</li>
+            <li>Your discoveries contribute to real exoplanet science</li>
+          </ol>
+        </div>
+      </div>
+      
+      <div class="game-feedback" id="gameFeedback"></div>
+      <div class="loading" id="exoplanetLoading" style="display: none;">Loading exoplanet data...</div>
+    </section>
+
+    <!-- Mars 3D Reconstruction Tab -->
+    <section class="tab-content" id="mars-3d">
+      <h2>🔴 Multi-Mission Mars Terrain 3D Reconstructor</h2>
+      <p class="section-description">
+        🎆 <strong>Revolutionary Mars exploration!</strong> 3D terrain reconstruction from multiple rover perspectives: Perseverance, Curiosity, Opportunity, and Spirit.
+      </p>
+      
+      <div class="mars-3d-controls">
+        <div class="control-group">
+          <label>Mission/Rover:</label>
+          <select id="marsRoverSelect">
+            <option value="all">All Missions Combined</option>
+            <option value="perseverance">Perseverance (Jezero Crater)</option>
+            <option value="curiosity">Curiosity (Gale Crater)</option>
+            <option value="opportunity">Opportunity (Meridiani Planum)</option>
+            <option value="spirit">Spirit (Gusev Crater)</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label>Terrain Region:</label>
+          <select id="terrainRegion">
+            <option value="jezero">Jezero Crater</option>
+            <option value="gale">Gale Crater</option>
+            <option value="meridiani">Meridiani Planum</option>
+            <option value="gusev">Gusev Crater</option>
+          </select>
+        </div>
+        
+        <div class="control-buttons">
+          <button id="generateTerrain" class="btn btn-primary">🔄 Generate 3D Terrain</button>
+          <button id="fetchMarsWeather" class="btn btn-secondary">🌡️ Mars Weather</button>
+          <button id="exportTerrainModel" class="btn btn-accent">💾 Export 3D Model</button>
+        </div>
+      </div>
+      
+      <div class="mars-3d-container">
+        <canvas id="mars3DCanvas" width="800" height="600"></canvas>
+        
+        <div class="mars-info-panel">
+          <h4>Terrain Analysis</h4>
+          <div id="terrainAnalysis">
+            <p>Select a rover mission to start 3D reconstruction...</p>
+          </div>
+          
+          <h4>Mars Weather (InSight)</h4>
+          <div id="marsWeatherData">
+            <p>Weather data will appear here...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="loading" id="mars3DLoading" style="display: none;">Reconstructing Mars terrain...</div>
+    </section>
+
+    <!-- Launch Window Optimizer Tab -->
+    <section class="tab-content" id="launch-optimizer">
+      <h2>🚀 Launch Window Optimization Engine</h2>
+      <p class="section-description">
+        🎆 <strong>Mission planning revolution!</strong> Calculate optimal launch windows for any destination in the solar system with real orbital mechanics.
+      </p>
+      
+      <div class="launch-optimizer-controls">
+        <div class="mission-parameters">
+          <div class="param-group">
+            <label>Origin:</label>
+            <select id="launchOrigin">
+              <option value="earth">Earth</option>
+              <option value="moon">Moon</option>
+              <option value="mars">Mars</option>
+            </select>
+          </div>
+          
+          <div class="param-group">
+            <label>Destination:</label>
+            <select id="launchDestination">
+              <option value="mars">Mars</option>
+              <option value="jupiter">Jupiter</option>
+              <option value="saturn">Saturn</option>
+              <option value="europa">Europa</option>
+              <option value="titan">Titan</option>
+              <option value="enceladus">Enceladus</option>
+              <option value="moon">Moon</option>
+            </select>
+          </div>
+          
+          <div class="param-group">
+            <label>Launch Site:</label>
+            <select id="launchSiteSelect">
+              <option value="KSC">Kennedy Space Center</option>
+              <option value="VAFB">Vandenberg AFB</option>
+              <option value="Kourou">Kourou</option>
+              <option value="Baikonur">Baikonur</option>
+            </select>
+          </div>
+          
+          <div class="param-group">
+            <label>Launch Vehicle:</label>
+            <select id="launchVehicleSelect">
+              <option value="Falcon Heavy">Falcon Heavy</option>
+              <option value="SLS">SLS</option>
+              <option value="Starship">Starship</option>
+              <option value="Atlas V">Atlas V</option>
+              <option value="Ariane 5">Ariane 5</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="mission-constraints">
+          <div class="constraint-group">
+            <label>Payload Mass (kg):</label>
+            <input type="number" id="payloadMass" value="1000" min="100" max="100000">
+          </div>
+          
+          <div class="constraint-group">
+            <label>Start Date:</label>
+            <input type="date" id="launchStartDate" value="2025-01-01">
+          </div>
+          
+          <div class="constraint-group">
+            <label>End Date:</label>
+            <input type="date" id="launchEndDate" value="2025-12-31">
+          </div>
+          
+          <div class="constraint-group">
+            <label>Max Flight Time (days):</label>
+            <input type="number" id="maxFlightTime" value="1000" min="30" max="3000">
+          </div>
+        </div>
+        
+        <div class="optimization-buttons">
+          <button id="calculateLaunchWindows" class="btn btn-primary">📊 Calculate Windows</button>
+          <button id="showLaunchManifest" class="btn btn-secondary">📄 Generate Manifest</button>
+          <button id="exportLaunchData" class="btn btn-accent">💾 Export Results</button>
+        </div>
+      </div>
+      
+      <div class="launch-results" id="launchResults">
+        <div class="results-summary" id="launchSummary"></div>
+        <div class="optimal-windows" id="optimalWindows"></div>
+        <div class="cost-analysis" id="costAnalysis"></div>
+      </div>
+      
+      <div class="loading" id="launchLoading" style="display: none;">Calculating optimal launch windows...</div>
+    </section>
+
+    <!-- Comet 3I/Atlas Tracker Tab -->
+    <section class="tab-content" id="comet-tracker">
+      <h2>☄️ Comet 3I/Atlas Real-Time Trajectory Tracker</h2>
+      <p class="section-description">
+        🎆 <strong>Track the interstellar visitor!</strong> Real-time tracking of Comet 3I/Atlas with observation planning for amateur astronomers.
+      </p>
+      
+      <div class="comet-tracker-controls">
+        <div class="tracking-info">
+          <div class="info-card">
+            <span class="info-label">Current Distance from Earth:</span>
+            <span class="info-value" id="cometEarthDistance">Loading...</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Current Distance from Sun:</span>
+            <span class="info-value" id="cometSunDistance">Loading...</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Apparent Magnitude:</span>
+            <span class="info-value" id="cometMagnitude">Loading...</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Activity Level:</span>
+            <span class="info-value" id="cometActivity">Loading...</span>
+          </div>
+        </div>
+        
+        <div class="observation-controls">
+          <label>Observer Location:</label>
+          <select id="observerLocation">
+            <option value="Stockholm">Stockholm, Sweden</option>
+            <option value="Mauna Kea">Mauna Kea, Hawaii</option>
+            <option value="Cerro Paranal">Cerro Paranal, Chile</option>
+            <option value="La Palma">La Palma, Canary Islands</option>
+            <option value="Greenwich">Greenwich, UK</option>
+          </select>
+          
+          <div class="tracker-buttons">
+            <button id="initializeTracking" class="btn btn-primary">🔄 Initialize Tracking</button>
+            <button id="generateObservationPlan" class="btn btn-secondary">🔭 Observation Plan</button>
+            <button id="exportEphemeris" class="btn btn-accent">📊 Export Ephemeris</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="comet-visualization">
+        <canvas id="cometTrajectoryCanvas" width="800" height="500"></canvas>
+        
+        <div class="observation-windows">
+          <h4>Next Observation Opportunities</h4>
+          <div id="observationWindowsList">
+            <p>Initialize tracking to see observation windows...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ephemeris-table">
+        <h4>30-Day Ephemeris</h4>
+        <div id="ephemerisData">
+          <p>Generate ephemeris data to see detailed predictions...</p>
+        </div>
+      </div>
+      
+      <div class="loading" id="cometLoading" style="display: none;">Calculating comet trajectory...</div>
     </section>
     
     <!-- Telescope Gallery Tab -->
@@ -227,8 +554,8 @@
   
   <footer>
     <div class="container">
-      © 2025 CaldaSpace | Ultimate Space Exploration Dashboard<br>
-      Real-time data from NASA, ESA, SpaceX | Telescope archives from MAST | Live ISS tracking
+      © 2025 CaldaSpace | Revolutionary Space Exploration Dashboard<br>
+      Real-time data from NASA, ESA, SpaceX | Multi-mission Mars reconstruction | Exoplanet citizen science | Solar weather alerts
       <br>
       <small>🔗 All images, news, and data are clickable to access original sources and detailed information</small>
     </div>
@@ -259,6 +586,32 @@
             <p>Access original data sources and downloads:</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Feedback Modal -->
+  <div class="modal" id="gameModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="gameModalTitle">Exoplanet Discovery</h3>
+        <button class="close-modal" id="closeGameModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="gameModalContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather Alert Modal -->
+  <div class="modal" id="weatherModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="weatherModalTitle">Space Weather Alert</h3>
+        <button class="close-modal" id="closeWeatherModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="weatherModalContent"></div>
       </div>
     </div>
   </div>
@@ -366,6 +719,28 @@
           });
         });
       });
+    })();
+
+    // Revolutionary features announcement
+    (function() {
+      const alertSection = document.querySelector('.revolutionary-features-alert');
+      const hasSeenAlert = localStorage.getItem('caldaspace_seen_revolutionary_alert');
+      
+      if (!hasSeenAlert) {
+        alertSection.style.display = 'block';
+        alertSection.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        alertSection.style.color = 'white';
+        alertSection.style.padding = '2rem';
+        alertSection.style.borderRadius = '10px';
+        alertSection.style.margin = '2rem 0';
+        alertSection.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          alertSection.style.opacity = '0.8';
+          localStorage.setItem('caldaspace_seen_revolutionary_alert', 'true');
+        }, 10000);
+      }
     })();
   </script>
 </body>
