@@ -4,329 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CaldaSpace | Space Data Explorer</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: #fafafa;
-            color: #1a1a1a;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e5e5e5;
-        }
-
-        h1 {
-            font-size: 28px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            font-size: 16px;
-            color: #6b7280;
-            font-weight: 400;
-        }
-
-        .api-section {
-            background: white;
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-
-        input[type="text"], input[type="date"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus, input[type="date"]:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 120px;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #e5e7eb;
-            transform: translateY(-1px);
-        }
-
-        .status {
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 16px;
-        }
-
-        .status.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-
-        .status.error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .tabs {
-            display: flex;
-            background: white;
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 24px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 12px 16px;
-            border: none;
-            background: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            min-width: 120px;
-        }
-
-        .tab.active {
-            background: #3b82f6;
-            color: white;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .feature-card {
-            background: white;
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .feature-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
-
-        .feature-description {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        .results-area {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 16px;
-            min-height: 200px;
-            margin-top: 16px;
-            font-size: 14px;
-            color: #374151;
-        }
-
-        .loading {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: #6b7280;
-        }
-
-        .loading.show {
-            display: flex;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #e5e7eb;
-            border-top: 2px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .image-container {
-            margin: 16px 0;
-        }
-
-        .image-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .image-container img:hover {
-            transform: scale(1.02);
-        }
-
-        .item-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            transition: box-shadow 0.2s;
-        }
-
-        .item-card:hover {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .item-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
-
-        .item-meta {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .canvas-game {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin: 16px 0;
-            max-width: 100%;
-            cursor: crosshair;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 16px;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            button {
-                width: 100%;
-            }
-            
-            .tabs {
-                flex-wrap: wrap;
-            }
-            
-            .tab {
-                flex: none;
-                min-width: auto;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -663,31 +341,65 @@
 
         async function loadMarsPhotos(rover) {
             const resultsDiv = document.getElementById('marsResults');
-            const sol = document.getElementById('marsSol').value || '1000';
+            const solInput = document.getElementById('marsSol');
+            let sol = solInput.value.trim();
             
-            resultsDiv.innerHTML = `<div class="loading show"><div class="spinner"></div>Loading ${rover} photos...</div>`;
+            // Default sol values that are known to have photos
+            const defaultSols = {
+                'curiosity': '1000',
+                'perseverance': '100', 
+                'opportunity': '1000',
+                'spirit': '500'
+            };
+            
+            if (!sol) {
+                sol = defaultSols[rover] || '1000';
+            }
+            
+            resultsDiv.innerHTML = `<div class="loading show"><div class="spinner"></div>Loading ${rover} photos from Sol ${sol}...</div>`;
             
             try {
-                const response = await fetch(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos?sol=${sol}&api_key=${currentApiKey}`);
+                const url = `https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos?sol=${sol}&api_key=${currentApiKey}`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid response format - expected JSON');
+                }
+                
                 const data = await response.json();
                 
-                if (response.ok && data.photos && data.photos.length > 0) {
+                if (data.photos && data.photos.length > 0) {
                     const photosHtml = data.photos.slice(0, 6).map(photo => `
                         <div class="item-card">
                             <div class="image-container">
                                 <img src="${photo.img_src}" alt="Mars photo from ${rover}" onclick="window.open(this.src, '_blank')">
                             </div>
                             <h4 class="item-title">Sol ${photo.sol} - ${photo.camera.full_name}</h4>
-                            <p class="item-meta">📅 ${photo.earth_date} | 🤖 ${photo.rover.name}</p>
+                            <p class="item-meta">📅 ${photo.earth_date} | 🤖 ${rover.charAt(0).toUpperCase() + rover.slice(1)}</p>
                         </div>
                     `).join('');
                     
-                    resultsDiv.innerHTML = `<h3>📸 ${rover.charAt(0).toUpperCase() + rover.slice(1)} Photos (Sol ${sol})</h3>${photosHtml}`;
+                    resultsDiv.innerHTML = `<h3>📸 ${rover.charAt(0).toUpperCase() + rover.slice(1)} Photos (Sol ${sol})</h3><p>Found ${data.photos.length} photos</p>${photosHtml}`;
                 } else {
-                    resultsDiv.innerHTML = '<p>❌ No photos found for this sol. Try a different sol number (e.g., 1000, 2000, 3000).</p>';
+                    resultsDiv.innerHTML = `<p>❌ No photos found for ${rover} on Sol ${sol}. Try a different sol number:</p>
+                        <ul style="margin-left: 20px;">
+                            <li>Curiosity: 1000, 2000, 3000</li>
+                            <li>Perseverance: 100, 200, 300</li>
+                            <li>Opportunity: 500, 1000</li>
+                            <li>Spirit: 100, 500</li>
+                        </ul>`;
                 }
             } catch (error) {
-                resultsDiv.innerHTML = `<p style="color: #991b1b;">❌ Error loading Mars photos: ${error.message}</p>`;
+                console.error('Mars Photos Error:', error);
+                resultsDiv.innerHTML = `<p style="color: #991b1b;">❌ Error loading Mars photos: ${error.message}</p>
+                    <p>Try a different rover or sol number.</p>`;
             }
         }
 
@@ -809,27 +521,24 @@
             if (!canvas) return;
             
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Set canvas size for retina displays
             const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * window.devicePixelRatio;
-            canvas.height = rect.height * window.devicePixelRatio;
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            // Set actual canvas size
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Draw light curve with potential transit
             ctx.strokeStyle = '#3b82f6';
             ctx.lineWidth = 2;
             ctx.beginPath();
             
-            const width = rect.width;
-            const height = rect.height;
-            
-            for (let x = 0; x < width; x++) {
-                let y = height / 2 + Math.sin(x * 0.02) * 20 + Math.random() * 8 - 4;
+            for (let x = 0; x < canvas.width; x++) {
+                let y = canvas.height / 2 + Math.sin(x * 0.02) * 20 + Math.random() * 8 - 4;
                 
                 // Add transit dips at random locations
-                const transitCenter = width * 0.4;
+                const transitCenter = canvas.width * 0.4;
                 if (Math.abs(x - transitCenter) < 40) {
                     y += 30 * Math.exp(-Math.pow(x - transitCenter, 2) / 800);
                 }
@@ -846,10 +555,10 @@
             ctx.strokeStyle = '#e5e7eb';
             ctx.lineWidth = 1;
             for (let i = 0; i < 5; i++) {
-                const y = (height / 4) * i;
+                const y = (canvas.height / 4) * i;
                 ctx.beginPath();
                 ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
+                ctx.lineTo(canvas.width, y);
                 ctx.stroke();
             }
         }
