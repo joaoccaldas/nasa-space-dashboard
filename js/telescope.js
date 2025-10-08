@@ -36,365 +36,240 @@ const TELESCOPE_MISSIONS = {
         name: 'Galaxy Evolution Explorer',
         service: 'Mast.Galex.Filtered',
         collection: 'GALEX',
-        filters: ['FUV', 'NUV']
-    },
-    'SPITZER': {
-        name: 'Spitzer Space Telescope',
-        service: 'Mast.Spitzer.Filtered',
-        collection: 'SPITZER',
-        filters: ['IRAC', 'MIPS']
+        filters: ['NUV', 'FUV']
     }
 };
 
 /**
- * Fetch real telescope observations from MAST
- * @param {string} mission - Telescope mission (JWST, HST, etc.)
- * @param {Object} params - Search parameters
- * @returns {Promise<Array>} Telescope observation data
+ * Fetch telescope observations from MAST
+ * @param {string} objectName - Target object name (e.g., 'M31', 'NGC 1365')
+ * @param {string} mission - Mission identifier (e.g., 'HST', 'JWST')
+ * @returns {Promise<Array>} Array of observation records
  */
-export async function fetchTelescopeObservations(mission = 'HST', params = {}) {
-    console.log(`Fetching ${mission} observations with params:`, params);
-    
-    const missionConfig = TELESCOPE_MISSIONS[mission];
-    if (!missionConfig) {
-        console.error(`Unknown mission: ${mission}`);
-        return [];
-    }
+export async function fetchTelescopeObservations(objectName, mission = 'all') {
+    console.log(`[Telescope] Fetching observations for ${objectName}, mission: ${mission}`);
     
     try {
-        // Use MAST CasJobs service for complex queries or simple position-based search
-        const searchParams = {
-            service: missionConfig.service,
-            format: 'json',
-            pagesize: params.count || 50,
-            page: params.page || 1,
-            columns: 'dataproduct_type,obs_collection,instrument_name,target_name,s_ra,s_dec,t_min,t_max,obsid,productFilename,dataURL,previewURL',
-            filters: [
-                {
-                    paramName: 'obs_collection',
-                    values: [missionConfig.collection]
-                }
-            ]
-        };
+        const missions = mission === 'all' 
+            ? Object.keys(TELESCOPE_MISSIONS)
+            : [mission];
         
-        // Add date filters if provided
-        if (params.startDate && params.endDate) {
-            const startMJD = dateToMJD(params.startDate);
-            const endMJD = dateToMJD(params.endDate);
+        const allResults = [];
+        
+        for (const missionId of missions) {
+            const config = TELESCOPE_MISSIONS[missionId];
+            if (!config) {
+                console.warn(`[Telescope] Unknown mission: ${missionId}`);
+                continue;
+            }
             
-            searchParams.filters.push({
-                paramName: 't_min',
-                values: [{ min: startMJD, max: endMJD }]
-            });
+            try {
+                console.log(`[Telescope] Querying ${config.name} for ${objectName}...`);
+                
+                // Build MAST query with proper parameters
+                const params = {
+                    service: config.service,
+                    format: 'json',
+                    target: objectName,
+                    radius: '0.2 deg',
+                    pagesize: 100,
+                    page: 1
+                };
+                
+                // Construct query string
+                const queryString = Object.entries(params)
+                    .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+                    .join('&');
+                
+                const url = `${MAST_API_BASE}/invoke?${queryString}`;
+                console.log(`[Telescope] Request URL: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.error(`[Telescope] ${config.name} API error: ${response.status} ${response.statusText}`);
+                    continue;
+                }
+                
+                const data = await response.json();
+                console.log(`[Telescope] ${config.name} response:`, data);
+                
+                if (data && data.data && Array.isArray(data.data)) {
+                    const observations = data.data.map(obs => ({
+                        mission: missionId,
+                        mission_name: config.name,
+                        target: obs.target_name || obs.targname || objectName,
+                        instrument: obs.instrument_name || obs.instrume || 'Unknown',
+                        observation_date: obs.t_min || obs.mjd_obs || new Date().toISOString(),
+                        exposure_time: obs.t_exptime || obs.exptime || 0,
+                        filters: obs.filters || 'Unknown',
+                        proposal_id: obs.proposal_id || obs.proposal || 'N/A',
+                        obs_id: obs.obs_id || obs.obsid || Math.random().toString(36).substr(2, 9),
+                        ra: obs.s_ra || obs.ra_targ || 0,
+                        dec: obs.s_dec || obs.dec_targ || 0,
+                        preview_url: obs.jpegURL || obs.preview_url || null
+                    }));
+                    
+                    allResults.push(...observations);
+                    console.log(`[Telescope] Found ${observations.length} observations from ${config.name}`);
+                } else {
+                    console.warn(`[Telescope] No data in response from ${config.name}`);
+                }
+                
+            } catch (missionError) {
+                console.error(`[Telescope] Error fetching from ${config.name}:`, missionError);
+                // Continue with other missions
+            }
         }
         
-        // Add instrument filter if specified
-        if (params.instrument) {
-            searchParams.filters.push({
-                paramName: 'instrument_name',
-                values: [params.instrument]
-            });
-        }
-        
-        const response = await fetch(`${MAST_API_BASE}/invoke`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(searchParams)
-        });
-        
-        if (!response.ok) {
-            console.error(`MAST API error: ${response.status}`);
-            // Fallback to mock data for demo
-            return generateMockTelescopeData(mission, params.count || 25);
-        }
-        
-        const data = await response.json();
-        console.log(`Received ${data.data?.length || 0} ${mission} observations`);
-        
-        return processMASTResponse(data.data || [], mission);
+        console.log(`[Telescope] Total observations found: ${allResults.length}`);
+        return allResults;
         
     } catch (error) {
-        console.error(`Error fetching ${mission} data:`, error);
-        // Fallback to enhanced mock data
-        return generateMockTelescopeData(mission, params.count || 25);
+        console.error('[Telescope] Fatal error in fetchTelescopeObservations:', error);
+        throw error;
     }
 }
 
 /**
- * Convert date to Modified Julian Date (MJD) for MAST queries
- * @param {string} dateString - Date in YYYY-MM-DD format
- * @returns {number} MJD value
+ * Generate mock telescope data as fallback
+ * @param {string} objectName - Target object name
+ * @param {number} count - Number of mock observations to generate
+ * @returns {Array} Array of mock observation records
  */
-function dateToMJD(dateString) {
-    const date = new Date(dateString + 'T00:00:00Z');
-    const jd = (date.getTime() / 86400000) + 2440587.5;
-    return jd - 2400000.5; // Convert to MJD
-}
-
-/**
- * Process MAST API response into standardized format
- * @param {Array} mastData - Raw MAST response data
- * @param {string} mission - Mission name
- * @returns {Array} Processed telescope data
- */
-function processMASTResponse(mastData, mission) {
-    return mastData.map(obs => ({
-        id: obs.obsid || obs.productFilename,
-        title: obs.target_name || `${mission} Observation`,
-        mission: mission,
-        instrument: obs.instrument_name,
-        target: obs.target_name,
-        ra: obs.s_ra, // Right Ascension
-        dec: obs.s_dec, // Declination
-        observation_date: mjdToDate(obs.t_min),
-        duration: obs.t_max - obs.t_min,
-        preview_url: obs.previewURL || generatePreviewURL(obs),
-        data_url: obs.dataURL,
-        fits_url: obs.productFilename ? `${MAST_PORTAL_BASE}/Download/file/${obs.productFilename}` : null,
-        metadata: {
-            'Observation ID': obs.obsid,
-            'Data Product Type': obs.dataproduct_type,
-            'Right Ascension': obs.s_ra ? `${obs.s_ra.toFixed(6)}°` : 'N/A',
-            'Declination': obs.s_dec ? `${obs.s_dec.toFixed(6)}°` : 'N/A',
-            'Observation Start': mjdToDate(obs.t_min),
-            'Observation End': mjdToDate(obs.t_max)
-        },
-        sourceLinks: {
-            mast_portal: `${MAST_PORTAL_BASE}/Mashup/Clients/Mast/Portal.html?searchQuery=${encodeURIComponent(obs.target_name || mission)}`,
-            data_download: obs.dataURL,
-            fits_download: obs.productFilename ? `${MAST_PORTAL_BASE}/Download/file/${obs.productFilename}` : null,
-            mission_page: getMissionURL(mission)
-        }
-    }));
-}
-
-/**
- * Convert MJD to readable date string
- * @param {number} mjd - Modified Julian Date
- * @returns {string} Date in YYYY-MM-DD format
- */
-function mjdToDate(mjd) {
-    if (!mjd) return 'Unknown';
-    const jd = mjd + 2400000.5;
-    const date = new Date((jd - 2440587.5) * 86400000);
-    return date.toISOString().split('T')[0];
-}
-
-/**
- * Generate preview URL for telescope observation
- * @param {Object} obs - Observation data
- * @returns {string} Preview URL
- */
-function generatePreviewURL(obs) {
-    if (obs.previewURL) return obs.previewURL;
-    // Generate placeholder or use observation ID to create preview
-    return `https://via.placeholder.com/400x400/2563eb/ffffff?text=${encodeURIComponent(obs.target_name || 'No Preview')}`;
-}
-
-/**
- * Get mission-specific URL
- * @param {string} mission - Mission name
- * @returns {string} Mission URL
- */
-function getMissionURL(mission) {
-    const urls = {
-        'JWST': 'https://www.nasa.gov/mission_pages/webb/main/index.html',
-        'HST': 'https://hubblesite.org/',
-        'TESS': 'https://tess.mit.edu/',
-        'KEPLER': 'https://www.nasa.gov/mission_pages/kepler/main/index.html',
-        'GALEX': 'https://www.galex.caltech.edu/',
-        'SPITZER': 'https://www.spitzer.caltech.edu/'
-    };
-    return urls[mission] || 'https://www.nasa.gov/';
-}
-
-/**
- * Generate enhanced mock telescope data as fallback
- * @param {string} mission - Mission name
- * @param {number} count - Number of images to generate
- * @returns {Array} Mock telescope data
- */
-function generateMockTelescopeData(mission, count = 25) {
-    console.log(`Generating mock data for ${mission} (${count} items)`);
+function generateMockTelescopeData(objectName, count = 20) {
+    console.log(`[Telescope] Generating ${count} mock observations for ${objectName}`);
     
-    const missionConfig = TELESCOPE_MISSIONS[mission] || TELESCOPE_MISSIONS['HST'];
-    const targets = [
-        'Messier 31 (Andromeda Galaxy)', 'Orion Nebula', 'Crab Nebula', 'Eagle Nebula',
-        'Horsehead Nebula', 'Ring Nebula', 'Helix Nebula', 'Cat\'s Eye Nebula',
-        'Rosette Nebula', 'Veil Nebula', 'Pillars of Creation', 'Lagoon Nebula',
-        'Whirlpool Galaxy', 'Sombrero Galaxy', 'Pinwheel Galaxy', 'Triangulum Galaxy',
-        'Saturn', 'Jupiter', 'Mars', 'Proxima Centauri', 'Alpha Centauri',
-        'Betelgeuse', 'Rigel', 'Vega', 'Sirius', 'Polaris', 'Arcturus'
-    ];
+    const missions = Object.keys(TELESCOPE_MISSIONS);
+    const instruments = ['ACS/WFC', 'WFC3/IR', 'NIRCAM', 'MIRI', 'CCD', 'GALEX'];
+    const filters = ['F814W', 'F606W', 'F444W', 'F200W', 'Clear', 'NUV'];
     
     const mockData = [];
+    const now = Date.now();
     
     for (let i = 0; i < count; i++) {
-        const target = targets[Math.floor(Math.random() * targets.length)];
-        const daysAgo = Math.floor(Math.random() * 365 * 5); // Up to 5 years ago
-        const obsDate = new Date();
-        obsDate.setDate(obsDate.getDate() - daysAgo);
+        const mission = missions[Math.floor(Math.random() * missions.length)];
+        const config = TELESCOPE_MISSIONS[mission];
         
-        const ra = Math.random() * 360;
-        const dec = (Math.random() - 0.5) * 180;
-        
-        // Generate realistic telescope preview URLs based on mission
-        let previewUrl;
-        switch (mission) {
-            case 'JWST':
-                previewUrl = `https://via.placeholder.com/600x600/FF6B35/ffffff?text=JWST:${encodeURIComponent(target.substring(0,15))}`;
-                break;
-            case 'HST':
-                previewUrl = `https://via.placeholder.com/600x600/4A90E2/ffffff?text=Hubble:${encodeURIComponent(target.substring(0,15))}`;
-                break;
-            case 'TESS':
-                previewUrl = `https://via.placeholder.com/400x400/50C878/ffffff?text=TESS:${encodeURIComponent(target.substring(0,12))}`;
-                break;
-            default:
-                previewUrl = `https://via.placeholder.com/500x500/2563eb/ffffff?text=${mission}:${encodeURIComponent(target.substring(0,12))}`;
-        }
+        // Generate date within last 5 years
+        const daysAgo = Math.floor(Math.random() * 1825); // 5 years
+        const obsDate = new Date(now - daysAgo * 24 * 60 * 60 * 1000);
         
         mockData.push({
-            id: `${mission.toLowerCase()}_${i.toString().padStart(4, '0')}`,
-            title: target,
             mission: mission,
-            instrument: missionConfig.filters[Math.floor(Math.random() * missionConfig.filters.length)],
-            target: target,
-            ra: ra,
-            dec: dec,
-            observation_date: obsDate.toISOString().split('T')[0],
-            duration: Math.random() * 3600, // Random duration in seconds
-            preview_url: previewUrl,
-            data_url: `${MAST_PORTAL_BASE}/Download/file/mast:${mission}_${i}`,
-            fits_url: `${MAST_PORTAL_BASE}/Download/file/mast:${mission}_${i}.fits`,
-            metadata: {
-                'Observation ID': `${mission.toLowerCase()}_obs_${i}`,
-                'Data Product Type': 'IMAGE',
-                'Mission': missionConfig.name,
-                'Instrument': missionConfig.filters[Math.floor(Math.random() * missionConfig.filters.length)],
-                'Target Name': target,
-                'Right Ascension': `${ra.toFixed(6)}°`,
-                'Declination': `${dec.toFixed(6)}°`,
-                'Observation Date': obsDate.toISOString().split('T')[0],
-                'Exposure Time': `${(Math.random() * 1000 + 100).toFixed(1)}s`,
-                'Filter': missionConfig.filters[Math.floor(Math.random() * missionConfig.filters.length)]
-            },
-            sourceLinks: {
-                mast_portal: `${MAST_PORTAL_BASE}/Mashup/Clients/Mast/Portal.html?searchQuery=${encodeURIComponent(target)}`,
-                fits_download: `${MAST_PORTAL_BASE}/Download/file/mast:${mission}_${i}.fits`,
-                mission_page: getMissionURL(mission),
-                nasa_api_docs: 'https://mast.stsci.edu/api'
-            }
+            mission_name: config.name,
+            target: objectName,
+            instrument: instruments[Math.floor(Math.random() * instruments.length)],
+            observation_date: obsDate.toISOString(),
+            exposure_time: Math.floor(Math.random() * 3000) + 100,
+            filters: filters[Math.floor(Math.random() * filters.length)],
+            proposal_id: `GO-${10000 + Math.floor(Math.random() * 10000)}`,
+            obs_id: `obs_${Math.random().toString(36).substr(2, 9)}`,
+            ra: Math.random() * 360,
+            dec: (Math.random() * 180) - 90,
+            preview_url: null
         });
     }
     
-    console.log(`Generated ${mockData.length} mock ${mission} observations`);
+    // Sort by date (most recent first)
+    mockData.sort((a, b) => new Date(b.observation_date) - new Date(a.observation_date));
+    
     return mockData;
 }
 
 /**
- * Fetch telescope data with enhanced filtering and metadata
- * @param {Object} options - Search options
- * @returns {Promise<Array>} Enhanced telescope data
+ * Fetch enhanced telescope data with fallback to mock data
+ * @param {string} objectName - Target object name
+ * @param {string} mission - Mission identifier or 'all'
+ * @returns {Promise<Object>} Object with observations and metadata
  */
-export async function fetchEnhancedTelescopeData(options = {}) {
-    const {
-        mission = 'HST',
-        startDate,
-        endDate,
-        count = 25,
-        instrument,
-        target
-    } = options;
+export async function fetchEnhancedTelescopeData(objectName, mission = 'all') {
+    console.log(`[Telescope] fetchEnhancedTelescopeData called for ${objectName}, mission: ${mission}`);
     
-    console.log(`Fetching enhanced telescope data for ${mission}`);
+    let observations = [];
+    let dataSource = 'mock';
+    let error = null;
     
     try {
-        // For now, use enhanced mock data with realistic telescope information
-        // In production, this would query the actual MAST API
-        const telescopeData = generateMockTelescopeData(mission, count);
+        // First, try to fetch real data from MAST
+        console.log('[Telescope] Attempting to fetch real MAST data...');
+        observations = await fetchTelescopeObservations(objectName, mission);
         
-        // Apply filters
-        let filteredData = telescopeData;
-        
-        if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            filteredData = filteredData.filter(obs => {
-                const obsDate = new Date(obs.observation_date);
-                return obsDate >= start && obsDate <= end;
-            });
+        if (observations && observations.length > 0) {
+            dataSource = 'mast';
+            console.log(`[Telescope] Successfully retrieved ${observations.length} real observations from MAST`);
+        } else {
+            console.warn('[Telescope] MAST returned no observations, using mock data');
+            observations = generateMockTelescopeData(objectName, 20);
         }
         
-        if (instrument) {
-            filteredData = filteredData.filter(obs => 
-                obs.instrument.toLowerCase().includes(instrument.toLowerCase())
-            );
-        }
-        
-        if (target) {
-            filteredData = filteredData.filter(obs => 
-                obs.target.toLowerCase().includes(target.toLowerCase())
-            );
-        }
-        
-        // Sort by observation date (newest first)
-        filteredData.sort((a, b) => new Date(b.observation_date) - new Date(a.observation_date));
-        
-        console.log(`Returning ${filteredData.length} filtered telescope observations`);
-        return filteredData;
-        
+    } catch (fetchError) {
+        // If real fetch fails, use mock data as fallback
+        console.error('[Telescope] Error fetching real data, falling back to mock data:', fetchError);
+        error = fetchError.message;
+        observations = generateMockTelescopeData(objectName, 20);
+    }
+    
+    // Calculate statistics
+    const stats = getTelescopeStats(observations);
+    
+    return {
+        objectName,
+        mission,
+        observations,
+        stats,
+        dataSource,
+        error,
+        timestamp: new Date().toISOString()
+    };
+}
+
+/**
+ * Search for telescope observations by object name
+ * @param {string} objectName - Target object name to search
+ * @returns {Promise<Array>} Array of matching observations
+ */
+export async function searchTelescopeObservations(objectName) {
+    console.log(`[Telescope] Searching observations for: ${objectName}`);
+    
+    try {
+        const data = await fetchEnhancedTelescopeData(objectName, 'all');
+        return data.observations;
     } catch (error) {
-        console.error('Error fetching telescope data:', error);
-        throw new Error('Failed to load telescope data. Please try again.');
+        console.error('[Telescope] Search error:', error);
+        return [];
     }
 }
 
 /**
- * Get available telescope missions
- * @returns {Array} List of available missions with metadata
+ * Get observations for multiple objects
+ * @param {Array<string>} objectNames - Array of object names
+ * @returns {Promise<Array>} Combined array of observations
  */
-export function getAvailableMissions() {
-    return Object.entries(TELESCOPE_MISSIONS).map(([key, config]) => ({
-        id: key,
-        name: config.name,
-        collection: config.collection,
-        instruments: config.filters,
-        url: getMissionURL(key)
-    }));
-}
-
-/**
- * Search telescope observations by object name
- * @param {string} objectName - Astronomical object name
- * @param {string} mission - Optional mission filter
- * @returns {Promise<Array>} Matching observations
- */
-export async function searchTelescopeByObject(objectName, mission = null) {
-    console.log(`Searching for observations of: ${objectName}`);
+export async function fetchMultipleObjectObservations(objectNames) {
+    console.log(`[Telescope] Fetching observations for ${objectNames.length} objects`);
     
-    const missions = mission ? [mission] : Object.keys(TELESCOPE_MISSIONS);
-    const allResults = [];
+    const promises = objectNames.map(name => 
+        fetchEnhancedTelescopeData(name, 'all')
+            .catch(err => {
+                console.error(`[Telescope] Error fetching ${name}:`, err);
+                return { observations: [] };
+            })
+    );
     
-    for (const missionKey of missions) {
-        try {
-            const data = await fetchEnhancedTelescopeData({
-                mission: missionKey,
-                target: objectName,
-                count: 10
-            });
-            allResults.push(...data);
-        } catch (error) {
-            console.warn(`Error searching ${missionKey} for ${objectName}:`, error);
-        }
-    }
+    const results = await Promise.all(promises);
+    const allResults = results.flatMap(r => r.observations || []);
     
-    // Sort by relevance (exact matches first, then partial matches)
+    // Sort by observation date (most recent first)
     allResults.sort((a, b) => {
-        const aExact = a.target.toLowerCase() === objectName.toLowerCase();
-        const bExact = b.target.toLowerCase() === objectName.toLowerCase();
+        const aExact = a.target.toLowerCase() === objectNames[0].toLowerCase();
+        const bExact = b.target.toLowerCase() === objectNames[0].toLowerCase();
         if (aExact && !bExact) return -1;
         if (!aExact && bExact) return 1;
         return new Date(b.observation_date) - new Date(a.observation_date);
