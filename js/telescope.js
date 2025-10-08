@@ -1,6 +1,5 @@
 // CaldaSpace - Real Telescope Image Module
 // Direct integration with NASA's MAST (Mikulski Archive for Space Telescopes)
-
 const MAST_API_BASE = 'https://mast.stsci.edu/api/v0.1';
 const MAST_PORTAL_BASE = 'https://mast.stsci.edu/portal';
 
@@ -41,10 +40,18 @@ const TELESCOPE_MISSIONS = {
 };
 
 /**
+ * Get list of available telescope missions
+ * @returns {Array<string>} Array of mission identifiers
+ */
+export function getAvailableMissions() {
+    return Object.keys(TELESCOPE_MISSIONS);
+}
+
+/**
  * Fetch telescope observations from MAST
  * @param {string} objectName - Target object name (e.g., 'M31', 'NGC 1365')
  * @param {string} mission - Mission identifier (e.g., 'HST', 'JWST')
- * @returns {Promise<Array>} Array of observation records
+ * @returns {Promise<array>} Array of observation records
  */
 export async function fetchTelescopeObservations(objectName, mission = 'all') {
     console.log(`[Telescope] Fetching observations for ${objectName}, mission: ${mission}`);
@@ -187,7 +194,7 @@ function generateMockTelescopeData(objectName, count = 20) {
  * Fetch enhanced telescope data with fallback to mock data
  * @param {string} objectName - Target object name
  * @param {string} mission - Mission identifier or 'all'
- * @returns {Promise<Object>} Object with observations and metadata
+ * @returns {Promise<object>} Object with observations and metadata
  */
 export async function fetchEnhancedTelescopeData(objectName, mission = 'all') {
     console.log(`[Telescope] fetchEnhancedTelescopeData called for ${objectName}, mission: ${mission}`);
@@ -233,7 +240,7 @@ export async function fetchEnhancedTelescopeData(objectName, mission = 'all') {
 /**
  * Search for telescope observations by object name
  * @param {string} objectName - Target object name to search
- * @returns {Promise<Array>} Array of matching observations
+ * @returns {Promise<array>} Array of matching observations
  */
 export async function searchTelescopeObservations(objectName) {
     console.log(`[Telescope] Searching observations for: ${objectName}`);
@@ -250,7 +257,7 @@ export async function searchTelescopeObservations(objectName) {
 /**
  * Get observations for multiple objects
  * @param {Array<string>} objectNames - Array of object names
- * @returns {Promise<Array>} Combined array of observations
+ * @returns {Promise<array>} Combined array of observations
  */
 export async function fetchMultipleObjectObservations(objectNames) {
     console.log(`[Telescope] Fetching observations for ${objectNames.length} objects`);
