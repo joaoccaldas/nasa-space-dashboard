@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="CaldaSpace - Advanced interactive web app showcasing NASA APIs with 3D visualizations, clickable source links, and comprehensive space data" />
-  <title>CaldaSpace - Advanced NASA Space Dashboard</title>
+  <meta name="description" content="CaldaSpace - The ultimate space exploration dashboard with real-time ISS tracking, NASA news, 3D NEO visualization, telescope images, Mars rover photos, and multi-agency space data" />
+  <title>CaldaSpace - Ultimate Space Exploration Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <!-- Three.js for 3D visualizations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -13,30 +13,67 @@
 <body>
   <header>
     <div class="container">
-      <h1>🚀 CaldaSpace</h1>
-      <p class="subtitle">Advanced space exploration with NASA's APIs, 3D visualizations & interactive data</p>
-      <div class="theme-toggle">
-        <label class="switch">
-          <input type="checkbox" id="themeToggle" />
-          <span class="slider"></span>
-        </label>
-        <span id="themeLabel">Light</span>
+      <div class="header-content">
+        <div class="branding">
+          <h1>🚀 CaldaSpace</h1>
+          <p class="subtitle">Ultimate space exploration dashboard with real-time data, 3D visualizations, and comprehensive NASA/ESA/SpaceX integration</p>
+        </div>
+        <div class="theme-toggle">
+          <label class="switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider"></span>
+          </label>
+          <span id="themeLabel">Light</span>
+        </div>
       </div>
     </div>
   </header>
+  
   <main class="container">
     <!-- API Key Input Section -->
     <section class="api-key-section">
-      <h2>Enter Your NASA API Key</h2>
+      <h2>🔑 NASA API Configuration</h2>
       <p>
-        Get your free API key at <a href="https://api.nasa.gov/" target="_blank" rel="noopener">api.nasa.gov</a>
+        Get your free NASA API key at <a href="https://api.nasa.gov/" target="_blank" rel="noopener">api.nasa.gov</a> for unlimited access.
       </p>
       <div class="input-group">
-        <input type="text" id="apiKeyInput" placeholder="Enter your NASA API key" />
+        <input type="text" id="apiKeyInput" placeholder="Enter your NASA API key (or use DEMO_KEY)" />
         <button id="saveApiKey">Save Key</button>
         <button id="testApiKey">Test Connection</button>
       </div>
       <p class="api-status" id="apiStatus"></p>
+    </section>
+    
+    <!-- Latest Space News Section -->
+    <section class="news-section">
+      <h2>📰 Latest Space News</h2>
+      <p class="section-description">
+        🔗 <strong>Click any news card</strong> to read the full article from NASA and space agencies worldwide.
+      </p>
+      <div class="news-controls">
+        <select id="newsCategory">
+          <option value="general">All Space News</option>
+          <option value="jwst">James Webb Telescope</option>
+          <option value="mars">Mars Exploration</option>
+          <option value="iss">International Space Station</option>
+          <option value="missions">NASA Missions</option>
+          <option value="artemis">Artemis Program</option>
+        </select>
+        <button id="refreshNews">Refresh News</button>
+      </div>
+      <div class="loading" id="newsLoading">Loading latest space news...</div>
+      <div class="news-grid" id="newsContent"></div>
+    </section>
+    
+    <!-- Multi-Agency Status Dashboard -->
+    <section class="agency-status-section">
+      <h2>🌍 Multi-Agency Space Status</h2>
+      <p class="section-description">
+        Real-time data from NASA, ESA, SpaceX, and ISS tracking. 🔗 <strong>Click cards</strong> for detailed mission information.
+      </p>
+      <div class="agency-grid" id="agencyStatus">
+        <div class="loading" id="agencyLoading">Loading agency status...</div>
+      </div>
     </section>
     
     <!-- Dashboard Tabs -->
@@ -49,7 +86,7 @@
     
     <!-- APOD Tab -->
     <section class="tab-content active" id="apod">
-      <h2>Astronomy Picture of the Day</h2>
+      <h2>🖼️ Astronomy Picture of the Day</h2>
       <p class="section-description">
         🔗 <strong>Click on any image</strong> to visit the original NASA source page with full details and high-resolution downloads.
       </p>
@@ -66,24 +103,21 @@
     
     <!-- Telescope Gallery Tab -->
     <section class="tab-content" id="telescopes">
-      <h2>Professional Telescope Archive</h2>
+      <h2>🔭 Professional Telescope Archive</h2>
       <p class="section-description">
-        Access imagery from NASA's Mikulski Archive for Space Telescopes (MAST). 🔗 <strong>Click images</strong> for source data, metadata, and FITS file downloads.
+        Access real imagery from NASA's space telescopes including JWST, Hubble, TESS, and more. 🔗 <strong>Click images</strong> for source data, metadata, and FITS file downloads.
       </p>
       <div class="telescope-controls">
         <div class="row">
           <label>
             Telescope/Mission:
             <select id="telescopeSelect">
-              <option value="all">All Missions</option>
-              <option value="JWST">James Webb Space Telescope</option>
               <option value="HST">Hubble Space Telescope</option>
+              <option value="JWST">James Webb Space Telescope</option>
               <option value="TESS">Transiting Exoplanet Survey Satellite</option>
-              <option value="KEPLER">Kepler</option>
-              <option value="K2">K2</option>
+              <option value="KEPLER">Kepler Space Telescope</option>
               <option value="GALEX">Galaxy Evolution Explorer</option>
               <option value="SPITZER">Spitzer Space Telescope</option>
-              <option value="WISE">Wide-field Infrared Survey Explorer</option>
             </select>
           </label>
           <label>
@@ -98,7 +132,7 @@
         <div class="row">
           <label>
             Start Date:
-            <input type="date" id="telescopeStartDate" value="1995-06-16" />
+            <input type="date" id="telescopeStartDate" />
           </label>
           <label>
             End Date:
@@ -118,7 +152,7 @@
     
     <!-- Mars Rover Tab -->
     <section class="tab-content" id="mars">
-      <h2>Mars Rover Photos</h2>
+      <h2>🔴 Mars Rover Photos</h2>
       <p class="section-description">
         Explore Mars through the eyes of NASA's rovers. 🔗 <strong>Click images</strong> to view full resolution and mission details.
       </p>
@@ -139,7 +173,7 @@
     
     <!-- NEO Tab with 3D Visualization -->
     <section class="tab-content" id="neo">
-      <h2>Near Earth Objects - 3D Interactive Visualization</h2>
+      <h2>🌍 Near Earth Objects - 3D Interactive Visualization</h2>
       <p class="section-description">
         🌍 Interactive 3D visualization of Near Earth Objects around our planet. Explore orbital paths, sizes, and trajectories including comet 3I/Atlas.
       </p>
@@ -193,13 +227,14 @@
   
   <footer>
     <div class="container">
-      © 2025 CaldaSpace | Advanced Space Exploration Dashboard | Data provided by NASA's Open APIs & MAST Archive
+      © 2025 CaldaSpace | Ultimate Space Exploration Dashboard<br>
+      Real-time data from NASA, ESA, SpaceX | Telescope archives from MAST | Live ISS tracking
       <br>
-      <small>🔗 All images and data are clickable to access original sources and detailed information</small>
+      <small>🔗 All images, news, and data are clickable to access original sources and detailed information</small>
     </div>
   </footer>
 
-  <!-- Enhanced MAST Data Preview Modal -->
+  <!-- Enhanced Data Preview Modal -->
   <div class="modal" id="mastModal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
@@ -237,6 +272,32 @@
       </div>
       <div class="modal-body">
         <div id="sourceModalContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- News Article Modal -->
+  <div class="modal" id="newsModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="newsModalTitle">Space News Article</h3>
+        <button class="close-modal" id="closeNewsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="newsModalContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agency Detail Modal -->
+  <div class="modal" id="agencyModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="agencyModalTitle">Agency Information</h3>
+        <button class="close-modal" id="closeAgencyModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="agencyModalContent"></div>
       </div>
     </div>
   </div>
