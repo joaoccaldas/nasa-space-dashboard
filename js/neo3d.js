@@ -1,13 +1,26 @@
-// CaldaSpace - 3D NEO Visualization Module
+// CaldaSpace - 3D NEO Visualization Module (Fixed)
 // Advanced Three.js implementation for Near Earth Objects and comet visualization
 
 export class NEO3DVisualizer {
     constructor(canvasId) {
+        console.log('NEO3DVisualizer: Initializing...');
+        
+        this.canvasId = canvasId;
         this.canvas = document.getElementById(canvasId);
+        
+        if (!this.canvas) {
+            console.error(`NEO3DVisualizer: Canvas with ID '${canvasId}' not found`);
+            return;
+        }
+        
+        if (typeof THREE === 'undefined') {
+            console.error('NEO3DVisualizer: Three.js not loaded');
+            return;
+        }
+        
         this.scene = null;
         this.camera = null;
         this.renderer = null;
-        this.controls = null;
         this.earth = null;
         this.neoObjects = [];
         this.cometTrajectory = null;
@@ -17,81 +30,114 @@ export class NEO3DVisualizer {
         this.selectedNEO = null;
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
+        this.isInitialized = false;
         
-        this.init();
+        // Wait for DOM and Three.js to be ready
+        setTimeout(() => this.init(), 100);
     }
     
     init() {
-        // Scene setup
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x000011);
-        
-        // Camera setup
-        const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
-        this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 10000);
-        this.camera.position.set(0, 0, 500);
-        
-        // Renderer setup
-        this.renderer = new THREE.WebGLRenderer({ 
-            canvas: this.canvas, 
-            antialias: true,
-            alpha: true
-        });
-        this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        
-        // Lighting
-        this.setupLighting();
-        
-        // Create Earth
-        this.createEarth();
-        
-        // Create starfield
-        this.createStarfield();
-        
-        // Setup controls (orbit controls simulation)
-        this.setupControls();
-        
-        // Add event listeners
-        this.setupEventListeners();
-        
-        // Start animation loop
-        this.animate();
-        
-        console.log('NEO 3D Visualizer initialized');
+        try {
+            console.log('NEO3DVisualizer: Starting initialization...');
+            
+            // Verify canvas dimensions
+            if (this.canvas.clientWidth === 0 || this.canvas.clientHeight === 0) {
+                console.warn('Canvas has zero dimensions, setting default size');
+                this.canvas.style.width = '100%';
+                this.canvas.style.height = '600px';
+            }
+            
+            // Scene setup
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x000011);
+            
+            // Camera setup
+            const aspect = this.canvas.clientWidth / this.canvas.clientHeight || 1.33;
+            this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 10000);
+            this.camera.position.set(0, 0, 500);
+            this.camera.lookAt(0, 0, 0);
+            
+            // Renderer setup with error handling
+            this.renderer = new THREE.WebGLRenderer({ 
+                canvas: this.canvas, 
+                antialias: true,
+                alpha: true,
+                preserveDrawingBuffer: true
+            });
+            
+            this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Setup scene components
+            this.setupLighting();
+            this.createEarth();
+            this.createStarfield();
+            this.setupControls();
+            this.setupEventListeners();
+            
+            // Start animation loop
+            this.animate();
+            
+            this.isInitialized = true;
+            console.log('NEO3DVisualizer: Initialization complete');
+            
+            // Trigger initial render
+            this.renderer.render(this.scene, this.camera);
+            
+        } catch (error) {
+            console.error('NEO3DVisualizer: Initialization failed:', error);
+            this.showError('3D visualization initialization failed. Please ensure WebGL is supported.');
+        }
+    }
+    
+    showError(message) {
+        const canvas = this.canvas;
+        if (canvas && canvas.parentNode) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'neo-3d-error';
+            errorDiv.innerHTML = `
+                <div class="error-content">
+                    <h4>⚠️ 3D Visualization Error</h4>
+                    <p>${message}</p>
+                    <button onclick="location.reload()">Reload Page</button>
+                </div>
+            `;
+            canvas.parentNode.insertBefore(errorDiv, canvas.nextSibling);
+        }
     }
     
     setupLighting() {
-        // Ambient light
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+        // Ambient light for overall illumination
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
         this.scene.add(ambientLight);
         
-        // Sun light (directional)
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        // Main directional light (Sun)
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
         sunLight.position.set(500, 200, 300);
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 2048;
-        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
         sunLight.shadow.camera.near = 0.5;
         sunLight.shadow.camera.far = 2000;
         this.scene.add(sunLight);
         
-        // Point light for Earth
-        const earthLight = new THREE.PointLight(0x4488ff, 0.5, 1000);
+        // Point light at Earth center
+        const earthLight = new THREE.PointLight(0x4488ff, 0.3, 1000);
         earthLight.position.set(0, 0, 0);
         this.scene.add(earthLight);
     }
     
     createEarth() {
-        const earthGeometry = new THREE.SphereGeometry(50, 64, 64);
+        console.log('Creating Earth model...');
         
-        // Create Earth material with texture simulation
+        const earthGeometry = new THREE.SphereGeometry(50, 32, 32);
+        
+        // Enhanced Earth material
         const earthMaterial = new THREE.MeshPhongMaterial({
-            color: 0x4488ff,
-            shininess: 50,
-            transparent: true,
-            opacity: 0.9
+            color: 0x2563eb,
+            shininess: 30,
+            transparent: false
         });
         
         this.earth = new THREE.Mesh(earthGeometry, earthMaterial);
@@ -99,62 +145,56 @@ export class NEO3DVisualizer {
         this.earth.castShadow = true;
         this.scene.add(this.earth);
         
-        // Earth atmosphere glow
-        const glowGeometry = new THREE.SphereGeometry(52, 64, 64);
+        // Earth atmosphere glow effect
+        const glowGeometry = new THREE.SphereGeometry(55, 32, 32);
         const glowMaterial = new THREE.MeshBasicMaterial({
             color: 0x88ccff,
             transparent: true,
-            opacity: 0.1,
+            opacity: 0.15,
             side: THREE.BackSide
         });
         const earthGlow = new THREE.Mesh(glowGeometry, glowMaterial);
         this.scene.add(earthGlow);
         
-        // Add Earth's orbit reference (optional)
-        const orbitGeometry = new THREE.RingGeometry(240, 245, 64);
-        const orbitMaterial = new THREE.MeshBasicMaterial({
-            color: 0x444444,
-            transparent: true,
-            opacity: 0.1,
-            side: THREE.DoubleSide
-        });
-        const earthOrbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
-        earthOrbit.rotation.x = Math.PI / 2;
-        this.scene.add(earthOrbit);
+        console.log('Earth model created successfully');
     }
     
     createStarfield() {
+        console.log('Creating starfield...');
+        
         const starGeometry = new THREE.BufferGeometry();
-        const starCount = 2000;
+        const starCount = 1000; // Reduced for performance
         const positions = new Float32Array(starCount * 3);
         
         for (let i = 0; i < starCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 4000;
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 4000;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 4000;
+            positions[i * 3] = (Math.random() - 0.5) * 2000;
+            positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
         }
         
         starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         
         const starMaterial = new THREE.PointsMaterial({
             color: 0xffffff,
-            size: 2,
+            size: 1.5,
             transparent: true,
             opacity: 0.8
         });
         
         const stars = new THREE.Points(starGeometry, starMaterial);
         this.scene.add(stars);
+        
+        console.log('Starfield created successfully');
     }
     
     setupControls() {
-        // Simple mouse controls
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         
         this.canvas.addEventListener('mousedown', (e) => {
             isDragging = true;
             previousMousePosition = { x: e.clientX, y: e.clientY };
+            this.canvas.style.cursor = 'grabbing';
         });
         
         this.canvas.addEventListener('mousemove', (e) => {
@@ -185,61 +225,93 @@ export class NEO3DVisualizer {
         
         this.canvas.addEventListener('mouseup', () => {
             isDragging = false;
+            this.canvas.style.cursor = 'grab';
+        });
+        
+        this.canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            this.canvas.style.cursor = 'grab';
         });
         
         this.canvas.addEventListener('wheel', (e) => {
-            const zoomSpeed = 0.1;
+            e.preventDefault();
+            const zoomSpeed = 20;
             const distance = this.camera.position.length();
             const newDistance = distance + (e.deltaY * zoomSpeed);
             
-            if (newDistance > 100 && newDistance < 2000) {
+            if (newDistance > 150 && newDistance < 1500) {
                 this.camera.position.multiplyScalar(newDistance / distance);
             }
         });
         
         // Click to select NEO
-        this.canvas.addEventListener('click', (e) => this.onNEOClick(e));
+        this.canvas.addEventListener('click', (e) => {
+            if (!isDragging) {
+                this.onNEOClick(e);
+            }
+        });
+        
+        // Set initial cursor
+        this.canvas.style.cursor = 'grab';
+        
+        console.log('Controls setup complete');
     }
     
     setupEventListeners() {
-        // Resize handler
-        window.addEventListener('resize', () => this.onResize());
+        // Resize handler with debouncing
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => this.onResize(), 100);
+        });
     }
     
     onResize() {
+        if (!this.renderer || !this.camera) return;
+        
         const width = this.canvas.clientWidth;
         const height = this.canvas.clientHeight;
         
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
+        
+        console.log(`Resized to ${width}x${height}`);
     }
     
     onNEOClick(event) {
+        if (!this.isInitialized) return;
+        
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.neoObjects.map(neo => neo.mesh));
+        const intersectObjects = this.neoObjects.map(neo => neo.mesh).filter(mesh => mesh);
+        const intersects = this.raycaster.intersectObjects(intersectObjects);
         
         if (intersects.length > 0) {
-            const clickedNEO = intersects[0].object.userData;
-            this.selectNEO(clickedNEO);
+            const clickedObject = intersects[0].object;
+            const neoData = this.neoObjects.find(neo => neo.mesh === clickedObject);
+            if (neoData) {
+                this.selectNEO(neoData);
+            }
         }
     }
     
-    selectNEO(neoData) {
+    selectNEO(neoObj) {
         // Deselect previous
-        if (this.selectedNEO) {
+        if (this.selectedNEO && this.selectedNEO.mesh) {
             this.selectedNEO.mesh.material.emissive.setHex(0x000000);
         }
         
-        this.selectedNEO = neoData;
+        this.selectedNEO = neoObj;
         
         // Highlight selected NEO
-        neoData.mesh.material.emissive.setHex(0x444444);
+        if (neoObj.mesh && neoObj.mesh.material) {
+            neoObj.mesh.material.emissive.setHex(0x333333);
+        }
         
         // Update info panel
-        this.updateInfoPanel(neoData.data);
+        this.updateInfoPanel(neoObj.data);
         
-        console.log('Selected NEO:', neoData.data.name);
+        console.log('Selected NEO:', neoObj.data.name);
     }
     
     updateInfoPanel(neoData) {
@@ -268,17 +340,39 @@ export class NEO3DVisualizer {
     }
     
     addNEOData(neoData) {
+        if (!this.isInitialized) {
+            console.warn('3D Visualizer not initialized, cannot add NEO data');
+            return;
+        }
+        
+        console.log('Adding NEO data to 3D visualization...');
+        
         // Clear existing NEOs
         this.clearNEOs();
         
         let neoCount = 0;
-        const maxNEOs = 100; // Limit for performance
+        const maxNEOs = 50; // Reduced for better performance
         
         for (const date in neoData.near_earth_objects) {
             const objects = neoData.near_earth_objects[date];
             
             objects.forEach(neo => {
                 if (neoCount >= maxNEOs) return;
+                
+                // Create 3D position data if not present
+                if (!neo.position3D && neo.close_approach_data?.[0]) {
+                    const approach = neo.close_approach_data[0];
+                    const distance = parseFloat(approach.miss_distance.astronomical) || 0.1;
+                    const angle = Math.random() * Math.PI * 2;
+                    
+                    neo.position3D = {
+                        x: Math.cos(angle) * distance * 150,
+                        y: Math.sin(angle) * distance * 150,
+                        z: (Math.random() - 0.5) * distance * 100,
+                        distance: distance,
+                        velocity: parseFloat(approach.relative_velocity.kilometers_per_second) || 1
+                    };
+                }
                 
                 if (neo.position3D) {
                     this.createNEOObject(neo);
@@ -288,83 +382,82 @@ export class NEO3DVisualizer {
         }
         
         console.log(`Added ${neoCount} NEO objects to 3D visualization`);
+        
+        // Update stats
+        this.updateNEOStats(neoCount);
     }
     
     createNEOObject(neoData) {
-        const diameter = neoData.estimated_diameter?.meters?.estimated_diameter_max || 100;
-        const radius = Math.log(diameter + 1) * 2 + 1; // Logarithmic scaling for visibility
-        
-        const geometry = new THREE.SphereGeometry(radius, 16, 16);
-        const material = new THREE.MeshPhongMaterial({
-            color: neoData.is_potentially_hazardous_asteroid ? 0xff4444 : 0x44ff44,
-            shininess: 50,
-            transparent: true,
-            opacity: 0.8
-        });
-        
-        const neoMesh = new THREE.Mesh(geometry, material);
-        neoMesh.position.set(
-            neoData.position3D.x,
-            neoData.position3D.y,
-            neoData.position3D.z
-        );
-        
-        neoMesh.userData = {
-            data: neoData,
-            mesh: neoMesh
-        };
-        
-        this.scene.add(neoMesh);
-        this.neoObjects.push({ mesh: neoMesh, data: neoData });
-        
-        // Add orbit path if enabled
-        if (this.showOrbits) {
-            this.createOrbitPath(neoData);
-        }
-        
-        // Add glow effect for hazardous asteroids
-        if (neoData.is_potentially_hazardous_asteroid) {
-            const glowGeometry = new THREE.SphereGeometry(radius * 1.3, 16, 16);
-            const glowMaterial = new THREE.MeshBasicMaterial({
-                color: 0xff4444,
+        try {
+            const diameter = neoData.estimated_diameter?.meters?.estimated_diameter_max || 100;
+            const radius = Math.max(2, Math.min(15, Math.log(diameter + 1) * 2)); // Better scaling
+            
+            const geometry = new THREE.SphereGeometry(radius, 16, 16);
+            const color = neoData.is_potentially_hazardous_asteroid ? 0xff4444 : 0x44aa44;
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: 50,
                 transparent: true,
-                opacity: 0.2,
-                side: THREE.BackSide
+                opacity: 0.85
             });
-            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-            glow.position.copy(neoMesh.position);
-            this.scene.add(glow);
+            
+            const neoMesh = new THREE.Mesh(geometry, material);
+            neoMesh.position.set(
+                neoData.position3D.x,
+                neoData.position3D.y,
+                neoData.position3D.z
+            );
+            
+            // Add to scene and tracking array
+            this.scene.add(neoMesh);
+            this.neoObjects.push({ mesh: neoMesh, data: neoData });
+            
+            // Add orbit path if enabled
+            if (this.showOrbits) {
+                this.createOrbitPath(neoData, neoMesh.position);
+            }
+            
+            // Add warning glow for hazardous asteroids
+            if (neoData.is_potentially_hazardous_asteroid) {
+                this.addHazardousGlow(neoMesh, radius);
+            }
+            
+        } catch (error) {
+            console.error('Error creating NEO object:', error);
         }
     }
     
-    createOrbitPath(neoData) {
-        if (!neoData.position3D) return;
-        
+    addHazardousGlow(neoMesh, radius) {
+        const glowGeometry = new THREE.SphereGeometry(radius * 1.5, 16, 16);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff4444,
+            transparent: true,
+            opacity: 0.2,
+            side: THREE.BackSide
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        glow.position.copy(neoMesh.position);
+        this.scene.add(glow);
+    }
+    
+    createOrbitPath(neoData, position) {
         const points = [];
-        const center = new THREE.Vector3(0, 0, 0);
-        const neoPos = new THREE.Vector3(
-            neoData.position3D.x,
-            neoData.position3D.y,
-            neoData.position3D.z
-        );
-        
-        // Create elliptical orbit approximation
-        const distance = neoPos.length();
-        const segments = 64;
+        const distance = position.length();
+        const segments = 32; // Reduced for performance
         
         for (let i = 0; i <= segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             const x = Math.cos(angle) * distance;
-            const y = Math.sin(angle) * distance * 0.7; // Elliptical
-            const z = Math.sin(angle * 2) * distance * 0.1; // Some Z variation
+            const y = Math.sin(angle) * distance * 0.8; // Slightly elliptical
+            const z = Math.sin(angle * 1.5) * distance * 0.1; // Z variation
             points.push(new THREE.Vector3(x, y, z));
         }
         
         const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
         const orbitMaterial = new THREE.LineBasicMaterial({
-            color: neoData.is_potentially_hazardous_asteroid ? 0xff8888 : 0x888888,
+            color: neoData.is_potentially_hazardous_asteroid ? 0xff6666 : 0x666666,
             transparent: true,
-            opacity: 0.3
+            opacity: 0.4
         });
         
         const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
@@ -372,12 +465,20 @@ export class NEO3DVisualizer {
     }
     
     addCometTrajectory(cometData) {
-        if (!this.showComet || !cometData.trajectory) return;
+        if (!this.isInitialized || !cometData.trajectory) {
+            console.warn('Cannot add comet trajectory - not initialized or no data');
+            return;
+        }
         
-        // Clear existing comet trajectory
+        console.log('Adding comet 3I/Atlas trajectory...');
+        
+        // Clear existing comet
         if (this.cometTrajectory) {
             this.scene.remove(this.cometTrajectory.line);
             this.scene.remove(this.cometTrajectory.comet);
+            if (this.cometTrajectory.tail) {
+                this.scene.remove(this.cometTrajectory.tail);
+            }
         }
         
         const points = cometData.trajectory.map(point => 
@@ -388,7 +489,6 @@ export class NEO3DVisualizer {
         const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(points);
         const trajectoryMaterial = new THREE.LineBasicMaterial({
             color: 0x00ffff,
-            linewidth: 2,
             transparent: true,
             opacity: 0.8
         });
@@ -397,7 +497,7 @@ export class NEO3DVisualizer {
         this.scene.add(trajectoryLine);
         
         // Create comet object
-        const cometGeometry = new THREE.SphereGeometry(8, 16, 16);
+        const cometGeometry = new THREE.SphereGeometry(6, 16, 16);
         const cometMaterial = new THREE.MeshPhongMaterial({
             color: 0x00ffff,
             shininess: 100,
@@ -407,53 +507,52 @@ export class NEO3DVisualizer {
         
         const comet = new THREE.Mesh(cometGeometry, cometMaterial);
         
-        // Position comet at current point in trajectory
+        // Position comet
         if (points.length > 0) {
-            const currentIndex = Math.floor(points.length * 0.3); // 30% through trajectory
+            const currentIndex = Math.floor(points.length * 0.3);
             comet.position.copy(points[currentIndex]);
         }
         
         this.scene.add(comet);
         
-        // Add comet tail effect
-        const tailGeometry = new THREE.ConeGeometry(3, 30, 8, 1, true);
-        const tailMaterial = new THREE.MeshBasicMaterial({
-            color: 0x88ffff,
-            transparent: true,
-            opacity: 0.3,
-            side: THREE.DoubleSide
-        });
-        
-        const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-        tail.position.copy(comet.position);
-        tail.lookAt(0, 0, 0); // Point tail away from sun (center)
-        this.scene.add(tail);
-        
         this.cometTrajectory = {
             line: trajectoryLine,
             comet: comet,
-            tail: tail,
             data: cometData
         };
         
-        console.log('Added comet 3I/Atlas trajectory');
+        console.log('Comet trajectory added successfully');
+    }
+    
+    updateNEOStats(count) {
+        const statsDiv = document.getElementById('neoStats');
+        if (statsDiv) {
+            statsDiv.innerHTML = `
+                <div class="neo-3d-stats">
+                    <span>🌍 Showing ${count} NEOs in 3D visualization</span>
+                </div>
+            `;
+        }
     }
     
     clearNEOs() {
         this.neoObjects.forEach(neoObj => {
-            this.scene.remove(neoObj.mesh);
+            if (neoObj.mesh) {
+                this.scene.remove(neoObj.mesh);
+            }
         });
         this.neoObjects = [];
         this.selectedNEO = null;
     }
     
     setAnimationSpeed(speed) {
-        this.animationSpeed = Math.max(0.1, Math.min(5, speed));
+        this.animationSpeed = Math.max(0.1, Math.min(5, parseFloat(speed) || 1));
+        console.log(`Animation speed set to: ${this.animationSpeed}`);
     }
     
     toggleOrbits(show) {
         this.showOrbits = show;
-        // Implement orbit visibility toggle
+        console.log(`Orbits ${show ? 'enabled' : 'disabled'}`);
     }
     
     toggleComet(show) {
@@ -461,15 +560,20 @@ export class NEO3DVisualizer {
         if (this.cometTrajectory) {
             this.cometTrajectory.line.visible = show;
             this.cometTrajectory.comet.visible = show;
-            this.cometTrajectory.tail.visible = show;
+            if (this.cometTrajectory.tail) {
+                this.cometTrajectory.tail.visible = show;
+            }
         }
+        console.log(`Comet visibility: ${show}`);
     }
     
     resetView() {
+        if (!this.camera) return;
+        
         this.camera.position.set(0, 0, 500);
         this.camera.lookAt(0, 0, 0);
         
-        if (this.selectedNEO) {
+        if (this.selectedNEO && this.selectedNEO.mesh) {
             this.selectedNEO.mesh.material.emissive.setHex(0x000000);
             this.selectedNEO = null;
         }
@@ -478,47 +582,69 @@ export class NEO3DVisualizer {
         if (infoPanel) {
             infoPanel.innerHTML = 'Select a NEO to view details';
         }
+        
+        console.log('View reset to default position');
     }
     
     animate() {
+        if (!this.isInitialized || !this.renderer || !this.scene || !this.camera) {
+            return;
+        }
+        
         requestAnimationFrame(() => this.animate());
         
-        // Rotate Earth
-        if (this.earth) {
-            this.earth.rotation.y += 0.005 * this.animationSpeed;
-        }
-        
-        // Animate NEO objects
-        this.neoObjects.forEach(neoObj => {
-            if (neoObj.data.position3D) {
-                const time = Date.now() * 0.001;
-                const speed = neoObj.data.position3D.velocity || 1;
-                neoObj.mesh.rotation.y += 0.01 * speed * this.animationSpeed;
+        try {
+            // Rotate Earth
+            if (this.earth) {
+                this.earth.rotation.y += 0.003 * this.animationSpeed;
             }
-        });
-        
-        // Animate comet if present
-        if (this.cometTrajectory && this.showComet) {
-            const time = Date.now() * 0.001;
-            this.cometTrajectory.comet.rotation.y += 0.02 * this.animationSpeed;
             
-            // Animate comet tail
-            if (this.cometTrajectory.tail) {
-                this.cometTrajectory.tail.rotation.z += 0.01 * this.animationSpeed;
+            // Animate NEO objects
+            this.neoObjects.forEach(neoObj => {
+                if (neoObj.mesh && neoObj.data.position3D) {
+                    const speed = neoObj.data.position3D.velocity || 1;
+                    neoObj.mesh.rotation.y += 0.005 * speed * this.animationSpeed;
+                }
+            });
+            
+            // Animate comet if present
+            if (this.cometTrajectory && this.showComet && this.cometTrajectory.comet) {
+                this.cometTrajectory.comet.rotation.y += 0.02 * this.animationSpeed;
             }
+            
+            // Render the scene
+            this.renderer.render(this.scene, this.camera);
+            
+        } catch (error) {
+            console.error('Animation error:', error);
         }
-        
-        this.renderer.render(this.scene, this.camera);
     }
     
     destroy() {
-        // Clean up resources
+        console.log('Destroying NEO 3D Visualizer...');
+        
+        this.isInitialized = false;
+        
+        // Clear NEO objects
+        this.clearNEOs();
+        
+        // Clean up Three.js resources
         if (this.renderer) {
             this.renderer.dispose();
+            this.renderer = null;
         }
         
-        // Remove event listeners
-        window.removeEventListener('resize', this.onResize);
+        if (this.scene) {
+            // Remove all objects from scene
+            while(this.scene.children.length > 0) {
+                this.scene.remove(this.scene.children[0]);
+            }
+            this.scene = null;
+        }
+        
+        this.camera = null;
+        this.earth = null;
+        this.cometTrajectory = null;
         
         console.log('NEO 3D Visualizer destroyed');
     }
