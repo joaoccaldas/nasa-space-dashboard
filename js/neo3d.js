@@ -1,16 +1,13 @@
 // CaldaSpace - 3D NEO Visualization Module (Fixed)
 // Advanced Three.js implementation for Near Earth Objects and comet visualization
-
 export class NEO3DVisualizer {
   constructor(canvasId) {
     this.canvasId = canvasId;
     this.canvas = document.getElementById(canvasId);
-
     if (!this.canvas) {
       console.error(`NEO3DVisualizer: Canvas with ID '${canvasId}' not found`);
       return;
     }
-
     // Defer init until THREE and canvas are ready
     this.isInitialized = false;
     this.scene = null;
@@ -21,7 +18,6 @@ export class NEO3DVisualizer {
     this.neoObjects = [];
     this.orbitLines = [];
     this.animationSpeed = 1;
-
     // Defensive: wait repeatedly for THREE to exist
     let attempts = 0;
     const waitForThree = () => {
@@ -38,125 +34,95 @@ export class NEO3DVisualizer {
   }
 
   init() {
+    if (this.isInitialized) return;
     try {
-      if (this.isInitialized) return;
-      if (typeof THREE === 'undefined') {
-        console.error('NEO3DVisualizer: Three.js not available at init');
-        return;
-      }
-
       // Scene
       this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x000010);
+      this.scene.background = new THREE.Color(0x000510);
 
       // Camera
-      const width = this.canvas.clientWidth || this.canvas.width || 800;
-      const height = this.canvas.clientHeight || this.canvas.height || 600;
-      this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1e7);
-      this.camera.position.set(0, 200, 450);
+      const w = this.canvas.clientWidth || 800;
+      const h = this.canvas.clientHeight || 600;
+      this.camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100000);
+      this.camera.position.set(0, 300, 800);
 
       // Renderer
-      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
-      this.renderer.setSize(width, height, false);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+      this.renderer.setSize(w, h);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-      // Lights
-      const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+      // Lighting
+      const ambient = new THREE.AmbientLight(0xffffff, 0.4);
       this.scene.add(ambient);
-      const sun = new THREE.PointLight(0xffffff, 2, 0);
-      sun.position.set(0, 0, 0);
-      this.scene.add(sun);
+      const directional = new THREE.DirectionalLight(0xffffff, 0.6);
+      directional.position.set(5, 3, 5);
+      this.scene.add(directional);
 
-      // Earth sphere
-      const earthGeo = new THREE.SphereGeometry(50, 32, 32);
-      const earthMat = new THREE.MeshPhongMaterial({ color: 0x1e90ff, emissive: 0x001133, shininess: 10 });
-      this.earth = new THREE.Mesh(earthGeo, earthMat);
+      // Earth
+      this.earth = this.#createEarth();
       this.scene.add(this.earth);
 
-      // Stars background
-      this.#addStars();
-
-      // Resize handling
-      window.addEventListener('resize', () => this.#onResize());
-      this.#onResize();
-
-      // Basic orbit controls if available
-      if (THREE.OrbitControls) {
+      // Controls
+      if (typeof THREE.OrbitControls !== 'undefined') {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.maxDistance = 5000;
+      } else {
+        console.warn('OrbitControls not loaded - basic camera only.');
       }
 
       this.isInitialized = true;
       this.animate();
+      console.log('NEO3DVisualizer initialized successfully.');
     } catch (err) {
       console.error('NEO3DVisualizer init error:', err);
     }
   }
 
-  #onResize() {
-    if (!this.camera || !this.renderer) return;
-    const width = this.canvas.clientWidth || this.canvas.parentElement?.clientWidth || 800;
-    const height = this.canvas.clientHeight || this.canvas.parentElement?.clientHeight || 600;
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height, false);
+  #createEarth() {
+    const radius = 50;
+    const geo = new THREE.SphereGeometry(radius, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x1e90ff,
+      emissive: 0x112244,
+      metalness: 0.2,
+      roughness: 0.7,
+    });
+    return new THREE.Mesh(geo, mat);
   }
 
-  #addStars() {
-    try {
-      const starGeo = new THREE.BufferGeometry();
-      const count = 2000;
-      const positions = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) {
-        positions[i * 3 + 0] = (Math.random() - 0.5) * 8000;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 8000;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 8000;
-      }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1, sizeAttenuation: true });
-      const stars = new THREE.Points(starGeo, starMat);
-      this.scene.add(stars);
-    } catch (e) {
-      console.warn('Failed to add stars background', e);
-    }
-  }
-
-  clearNEOs() {
-    for (const obj of this.neoObjects) this.scene.remove(obj);
-    for (const line of this.orbitLines) this.scene.remove(line);
+  updateNEOData(neos) {
+    if (!this.isInitialized || !Array.isArray(neos)) return;
+    // Clear old
+    this.neoObjects.forEach((m) => this.scene.remove(m));
+    this.orbitLines.forEach((l) => this.scene.remove(l));
     this.neoObjects = [];
     this.orbitLines = [];
-  }
 
-  // Public API to load NEO list from data
-  setNEOData(neoArray) {
-    if (!Array.isArray(neoArray)) {
-      console.warn('setNEOData: invalid data, expected array');
-      return;
-    }
-    this.clearNEOs();
-    neoArray.forEach((neo, idx) => {
-      try {
-        const mesh = this.#createNEOSphere(neo, idx);
-        this.neoObjects.push(mesh);
-        this.scene.add(mesh);
-        const orbit = this.#createOrbitLine(neo);
-        if (orbit) {
-          this.orbitLines.push(orbit);
-          this.scene.add(orbit);
-        }
-      } catch (e) {
-        console.warn('Failed adding NEO', neo?.name || idx, e);
+    // Add new
+    neos.forEach((neo, idx) => {
+      const mesh = this.#createNeoMesh(neo, idx);
+      this.scene.add(mesh);
+      this.neoObjects.push(mesh);
+
+      const orbit = this.#createOrbitLine(neo);
+      if (orbit) {
+        this.scene.add(orbit);
+        this.orbitLines.push(orbit);
       }
     });
+    console.log(`Updated NEO visualization with ${neos.length} objects.`);
   }
 
-  #createNEOSphere(neo, idx) {
-    const sizeKm = Number(neo?.estimated_diameter_kilometers?.estimated_diameter_max) || 0.2;
-    const radius = Math.max(1.5, Math.min(6, sizeKm * 2));
-    const color = neo?.is_potentially_hazardous_asteroid ? 0xff5555 : 0xffcc00;
-    const geo = new THREE.SphereGeometry(radius, 16, 16);
-    const mat = new THREE.MeshStandardMaterial({ color, emissive: 0x110000 });
+  #createNeoMesh(neo, idx) {
+    // Estimate size from diameter or use fallback
+    const diaMeter = Number(neo?.estimated_diameter_meters?.estimated_diameter_max) || 50;
+    const size = Math.min(Math.max(1, Math.log(diaMeter) * 0.5), 10);
+
+    const geo = new THREE.SphereGeometry(size, 16, 16);
+    const color = neo.is_potentially_hazardous_asteroid ? 0xff3333 : 0xffaa00;
+    const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.3 });
     const mesh = new THREE.Mesh(geo, mat);
 
     // Position from provided close_approach_data (basic approximation)
@@ -165,7 +131,6 @@ export class NEO3DVisualizer {
     const theta = (idx * 137.5) * (Math.PI / 180);
     const r = Math.log10(Math.max(1, missKm)) * 2; // compress scale
     mesh.position.set(Math.cos(theta) * r * 50, (Math.random() - 0.5) * 20, Math.sin(theta) * r * 50);
-
     mesh.userData = { neo };
     return mesh;
   }
@@ -197,17 +162,17 @@ export class NEO3DVisualizer {
   animate() {
     if (!this.isInitialized) return;
     requestAnimationFrame(() => this.animate());
-
     // slow earth rotation
     if (this.earth) this.earth.rotation.y += 0.0015 * this.animationSpeed;
-
     // small motion for NEOs
     for (let i = 0; i < this.neoObjects.length; i++) {
       const m = this.neoObjects[i];
       m.rotation.y += 0.01;
     }
-
     if (this.controls && this.controls.update) this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }
 }
+
+// Export as default for compatibility with 'import NEO3DVisualizer from' syntax
+export default NEO3DVisualizer;
