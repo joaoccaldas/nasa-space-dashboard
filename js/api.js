@@ -208,7 +208,7 @@ export async function fetchAPOD(apiKey, date = '') {
             let errorData = null;
             try {
                 errorData = await response.json();
-            } catch (e) {}
+            } catch (e) { console.warn("Non-critical error:", e.message || e); }
             
             const errorMessage = parseAPIError(response, errorData);
             throw new Error(errorMessage);
@@ -272,7 +272,7 @@ export async function fetchMarsPhotos(apiKey, rover = 'curiosity', earthDate, pa
             let errorData = null;
             try {
                 errorData = await response.json();
-            } catch (e) {}
+            } catch (e) { console.warn("Non-critical error:", e.message || e); }
             
             const errorMessage = parseAPIError(response, errorData);
             throw new Error(errorMessage);
@@ -317,7 +317,7 @@ export async function fetchLatestMarsPhotos(apiKey, rover = 'curiosity', count =
             let errorData = null;
             try {
                 errorData = await response.json();
-            } catch (e) {}
+            } catch (e) { console.warn("Non-critical error:", e.message || e); }
             
             const errorMessage = parseAPIError(response, errorData);
             throw new Error(errorMessage);
@@ -368,7 +368,7 @@ export async function fetchNearEarthObjects(apiKey, startDate, endDate) {
             let errorData = null;
             try {
                 errorData = await response.json();
-            } catch (e) {}
+            } catch (e) { console.warn("Non-critical error:", e.message || e); }
             
             const errorMessage = parseAPIError(response, errorData);
             throw new Error(errorMessage);
@@ -498,7 +498,7 @@ export async function fetchNASAAPI(endpoint, apiKey, params = {}) {
             let errorData = null;
             try {
                 errorData = await response.json();
-            } catch (e) {}
+            } catch (e) { console.warn("Non-critical error:", e.message || e); }
             
             const errorMessage = parseAPIError(response, errorData);
             throw new Error(errorMessage);
