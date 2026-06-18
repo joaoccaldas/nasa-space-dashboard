@@ -1,0 +1,58 @@
+  function initScrollChoreography() {
+    const selectors = '.section-heading,.feature-panel,.news-card,.mission-card,.progress-card,.search-panel,.learning-toolbar,.knowledge-card,.theory-card,.atlas-panel,.object-card,.observation-card,.game-card,.achievement';
+    const mark = () => $$(selectors).forEach(element => { if (!element.classList.contains('reveal-ready')) { element.classList.add('reveal-ready'); reveal.observe(element); } });
+    const reveal = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('in-view'); reveal.unobserve(entry.target); } }), { threshold: .12, rootMargin: '0px 0px -5% 0px' });
+    mark(); new MutationObserver(mark).observe($('#main') || document.body, { childList: true, subtree: true });
+    let lastY = scrollY;
+    addEventListener('scroll', () => {
+      const max = document.documentElement.scrollHeight - innerHeight; const percent = max > 0 ? Math.min(100, scrollY / max * 100) : 0; document.body.style.setProperty('--scroll-progress', `${percent}%`);
+      const nav = $('.mobile-nav'); if (nav && innerWidth < 700 && scrollY > 180) { nav.classList.toggle('nav-hidden', scrollY > lastY + 7); } lastY = scrollY;
+    }, { passive: true });
+  }
+
+  function ripple(event) {
+    const target = event.target.closest('.button,.chip,.icon-button,.profile-button,.answer'); if (!target || reduceMotion) return;
+    const rect = target.getBoundingClientRect(); const size = Math.max(rect.width, rect.height) * 1.8;
+    const dot = document.createElement('span'); dot.className = 'ui-ripple'; dot.style.width = dot.style.height = `${size}px`; dot.style.left = `${event.clientX - rect.left}px`; dot.style.top = `${event.clientY - rect.top}px`; target.append(dot); dot.addEventListener('animationend', () => dot.remove());
+  }
+
+  function burstAt(element, count = 16) {
+    if (!element || reduceMotion) return;
+    const rect = element.getBoundingClientRect(), x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
+    for (let i = 0; i < count; i++) { const particle = document.createElement('i'); particle.className = 'celebration-particle'; const angle = Math.PI * 2 * i / count + Math.random() * .35, distance = 45 + Math.random() * 95; particle.style.left = `${x}px`; particle.style.top = `${y}px`; particle.style.setProperty('--dx', `${Math.cos(angle) * distance}px`); particle.style.setProperty('--dy', `${Math.sin(angle) * distance}px`); particle.style.setProperty('--rot', `${Math.random() * 540 - 270}deg`); particle.style.setProperty('--particle', colors[i % colors.length]); document.body.append(particle); particle.addEventListener('animationend', () => particle.remove()); }
+    navigator.vibrate?.(18);
+  }
+
+  function xpFlight(element, amount = '+XP') {
+    if (!element || reduceMotion) return;
+    const rect = element.getBoundingClientRect();
+    for (let i = 0; i < 6; i++) { const p = document.createElement('span'); p.className = 'xp-particle'; p.textContent = amount; p.style.left = `${rect.left + rect.width / 2}px`; p.style.top = `${rect.top + rect.height / 2}px`; p.style.setProperty('--dx', `${(Math.random() - .5) * 90}px`); p.style.setProperty('--rot', `${(Math.random() - .5) * 60}deg`); document.body.append(p); p.addEventListener('animationend', () => p.remove()); }
+  }
+
+  function animateCounter(element) {
+    if (!element || element.dataset.animating === '1') return;
+    const target = Number.parseInt(element.textContent, 10); if (!Number.isFinite(target)) return;
+    const previous = Number.parseInt(element.dataset.displayValue || '0', 10); if (previous === target) return;
+    element.dataset.animating = '1'; element.classList.add('count-animated'); const start = performance.now(), duration = 650;
+    function frame(now) { const t = Math.min(1, (now - start) / duration), eased = 1 - Math.pow(1 - t, 3); element.textContent = String(Math.round(previous + (target - previous) * eased)); if (t < 1) requestAnimationFrame(frame); else { element.dataset.displayValue = String(target); element.dataset.animating = '0'; } }
+    requestAnimationFrame(frame);
+  }
+
+  function initFeedback() {
+    document.addEventListener('pointerdown', ripple);
+    const counters = ['#heroXp', '#progressXp', '#savedCount', '#progressSaved', '#progressQuiz', '#progressAchievements'];
+    counters.forEach(selector => { const element = $(selector); if (!element) return; element.dataset.displayValue = element.textContent.trim(); new MutationObserver(() => animateCounter(element)).observe(element, { childList: true, characterData: true, subtree: true }); });
+    const toast = $('#toast'); if (toast) new MutationObserver(() => { if (toast.classList.contains('show')) { if (/\+\d+ XP/.test(toast.textContent)) xpFlight($('#progressRing'), toast.textContent.match(/\+\d+ XP/)?.[0]); if (/unlocked|complete/i.test(toast.textContent)) burstAt(toast, 22); } }).observe(toast, { attributes: true, childList: true, subtree: true });
+    const saved = $('#savedCount'); if (saved) new MutationObserver(() => { const button = $('#savedOpen'); button?.classList.remove('saved-pulse'); void button?.offsetWidth; button?.classList.add('saved-pulse'); }).observe(saved, { childList: true, subtree: true });
+    document.addEventListener('click', event => { if (event.target.closest('.save-inline')) { const button = event.target.closest('.save-inline'); button.classList.add('saved-pulse'); setTimeout(() => button.classList.remove('saved-pulse'), 650); } if (event.target.closest('.answer')) setTimeout(() => { const correct = $('.answer.correct'); if (correct) burstAt(correct, 18); }, 80); if (event.target.closest('#acceptMission')) setTimeout(() => { if (/complete/i.test($('#acceptMission')?.textContent || '')) burstAt($('#acceptMission'), 28); }, 80); });
+  }
+
+  function initCardDepth() {
+    if (!matchMedia('(hover:hover)').matches || reduceMotion) return;
+    const selector = '.news-card,.knowledge-card,.theory-card,.object-card,.game-card,.media-card';
+    document.addEventListener('pointermove', event => { const card = event.target.closest(selector); if (!card) return; const rect = card.getBoundingClientRect(); const x = (event.clientX - rect.left) / rect.width - .5, y = (event.clientY - rect.top) / rect.height - .5; card.style.transform = `perspective(900px) rotateX(${y * -3}deg) rotateY(${x * 4}deg) translateY(-3px)`; });
+    document.addEventListener('pointerout', event => { const card = event.target.closest(selector); if (card && !card.contains(event.relatedTarget)) card.style.transform = ''; });
+  }
+
+  mountGlobalLayers(); initRouteWarp(); initCosmicField(); initHeroUniverse(); initScrollChoreography(); initFeedback(); initCardDepth();
+})();
