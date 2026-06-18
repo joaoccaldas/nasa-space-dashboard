@@ -1,0 +1,46 @@
+(() => {
+  'use strict';
+  const discover = document.querySelector('#discover');
+  const searchPanel = discover?.querySelector('.search-panel');
+  if (!discover || !searchPanel || document.querySelector('#archiveLab')) return;
+  const today = new Date().toISOString().slice(0,10);
+  const lab = document.createElement('section');
+  lab.id='archiveLab'; lab.className='archive-lab';
+  lab.innerHTML=`<p class="eyebrow">Recovered legacy tools</p><h2>Space archive laboratory</h2><p class="lede">Travel through APOD history and browse rover imagery without leaving the family experience.</p><div class="archive-tabs" role="tablist"><button class="active" data-archive-tab="apod">APOD time machine</button><button data-archive-tab="rover">Rover gallery</button><button data-archive-tab="key">NASA API key</button></div><div class="archive-controls" id="archiveControls"></div><div class="archive-result" id="archiveResult" aria-live="polite"></div>`;
+  searchPanel.insertAdjacentElement('afterend',lab);
+  const controls=lab.querySelector('#archiveControls'),result=lab.querySelector('#archiveResult');
+  let tab='apod';
+  const safeUrl=value=>{try{const u=new URL(value,location.href);return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}};
+  const loading=text=>{result.innerHTML=`<div class="archive-empty">${text}</div>`};
+  async function fetchJSON(url){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw new Error(`Request failed ${response.status}`);return response.json();}finally{clearTimeout(timer)}}
+  function currentKey(){try{return localStorage.getItem('caldaspace-nasa-key')||'DEMO_KEY'}catch{return'DEMO_KEY'}}
+  function render(){
+    [...lab.querySelectorAll('[data-archive-tab]')].forEach(button=>button.classList.toggle('active',button.dataset.archiveTab===tab));result.innerHTML='';
+    if(tab==='apod'){
+      controls.innerHTML=`<label>Date<input id="archiveDate" type="date" min="1995-06-16" max="${today}" value="${today}"></label><label>Mode<select id="archiveMode"><option value="single">Single day</option><option value="week">Seven-day gallery</option></select></label><button class="button primary" id="archiveLaunch">Travel through time</button>`;
+      controls.querySelector('#archiveLaunch').onclick=loadApod;
+    }else if(tab==='rover'){
+      controls.innerHTML=`<label>Rover<select id="roverName"><option value="Perseverance Mars rover">Perseverance</option><option value="Curiosity Mars rover">Curiosity</option><option value="Opportunity Mars rover">Opportunity</option><option value="Spirit Mars rover">Spirit</option></select></label><label>Results<select id="roverCount"><option>8</option><option>12</option><option>16</option></select></label><button class="button primary" id="roverLaunch">Open rover gallery</button>`;
+      controls.querySelector('#roverLaunch').onclick=loadRover;
+    }else{
+      controls.innerHTML=`<label style="grid-column:1/-1">NASA API key<input id="nasaKeyInput" autocomplete="off" value="${currentKey()==='DEMO_KEY'?'':currentKey()}" placeholder="Leave empty to use DEMO_KEY"></label><button class="button primary" id="saveNasaKey">Save locally</button>`;
+      controls.querySelector('#saveNasaKey').onclick=()=>{const value=controls.querySelector('#nasaKeyInput').value.trim();try{if(value)localStorage.setItem('caldaspace-nasa-key',value);else localStorage.removeItem('caldaspace-nasa-key')}catch{}result.innerHTML='<div class="archive-empty">API key saved only in this browser.</div>';};
+    }
+  }
+  async function loadApod(){
+    const date=controls.querySelector('#archiveDate').value||today,mode=controls.querySelector('#archiveMode').value;loading('Opening the astronomy archive…');
+    try{
+      const url=mode==='week'?`https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(currentKey())}&start_date=${new Date(new Date(date).getTime()-6*86400000).toISOString().slice(0,10)}&end_date=${date}&thumbs=true`:`https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(currentKey())}&date=${date}&thumbs=true`;
+      const data=await fetchJSON(url);const items=Array.isArray(data)?data:[data];
+      if(items.length===1){const item=items[0],image=safeUrl(item.hdurl||item.url||item.thumbnail_url);result.innerHTML='<article class="archive-feature"><img alt=""><div><span class="status verified">NASA APOD archive</span><h3></h3><p></p><a class="button secondary" target="_blank" rel="noopener noreferrer">Open NASA source</a></div></article>';const img=result.querySelector('img');img.src=image;img.alt=item.title||'NASA astronomy picture';result.querySelector('h3').textContent=item.title||'Astronomy Picture of the Day';result.querySelector('p').textContent=item.explanation||'';result.querySelector('a').href=`https://apod.nasa.gov/apod/ap${date.replaceAll('-','').slice(2)}.html`;}
+      else{result.innerHTML='<div class="archive-grid"></div>';const grid=result.firstElementChild;items.reverse().forEach(item=>{const article=document.createElement('article');article.innerHTML='<img alt=""><div><h3></h3><small></small></div>';article.querySelector('img').src=safeUrl(item.url||item.thumbnail_url);article.querySelector('img').alt=item.title||'NASA astronomy picture';article.querySelector('h3').textContent=item.title||'APOD';article.querySelector('small').textContent=item.date||'';grid.append(article);});}
+    }catch(error){result.innerHTML='<div class="archive-empty">The APOD archive could not be reached. Check the connection or add a personal NASA API key.</div>';}
+  }
+  async function loadRover(){
+    const query=controls.querySelector('#roverName').value,count=Number(controls.querySelector('#roverCount').value)||8;loading('Searching NASA rover imagery…');
+    try{const data=await fetchJSON(`https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=image&page_size=${count}`);const items=(data.collection?.items||[]).slice(0,count);if(!items.length)throw new Error('No items');result.innerHTML='<div class="archive-grid"></div>';const grid=result.firstElementChild;items.forEach(item=>{const meta=item.data?.[0]||{},image=safeUrl(item.links?.find(link=>link.render==='image')?.href||item.links?.[0]?.href);if(!image)return;const article=document.createElement('article');article.innerHTML='<img alt=""><div><h3></h3><small></small></div>';article.querySelector('img').src=image;article.querySelector('img').alt=meta.title||'NASA rover image';article.querySelector('h3').textContent=meta.title||'Rover image';article.querySelector('small').textContent=(meta.date_created||'').slice(0,10);grid.append(article);});}
+    catch(error){result.innerHTML='<div class="archive-empty">Rover imagery is unavailable right now. This gallery uses NASA Images rather than the retired legacy rover endpoint.</div>';}
+  }
+  lab.addEventListener('click',event=>{const button=event.target.closest('[data-archive-tab]');if(!button)return;tab=button.dataset.archiveTab;render();});
+  render();
+})();

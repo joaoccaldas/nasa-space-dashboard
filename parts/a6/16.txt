@@ -1,0 +1,15 @@
+(() => {
+  'use strict';
+  const banner = document.querySelector('#offlineBanner');
+  if (!banner) return;
+  const label = banner.querySelector('span');
+  const detail = banner.querySelector('small');
+  if (label) label.textContent = 'Network limited';
+  if (detail) detail.textContent = 'Showing cached data';
+  banner.hidden = true;
+  banner.title = 'Tap to dismiss';
+  banner.style.cursor = 'pointer';
+  banner.addEventListener('click', () => { banner.hidden = true; });
+  addEventListener('offline', () => { banner.hidden = false; });
+  addEventListener('online', () => { banner.hidden = true; });
+})();
