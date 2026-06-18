@@ -1,0 +1,59 @@
+(() => {
+  'use strict';
+  const DATA = window.CALDASPACE_DATA;
+  const $ = (s, p = document) => p.querySelector(s);
+  const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+  const ROUTES = ['home', 'discover', 'learn', 'observe', 'play'];
+  const STORAGE_KEY = 'caldaspace-state-v2';
+  const CACHE_KEY = 'caldaspace-data-cache-v2';
+  const DAY = new Date().toISOString().slice(0, 10);
+  const PATCHES = ['C', '🚀', '🌙', '🪐', '☄️', '🔭', '🛰️', '👩‍🚀'];
+  const memoryStorage = new Map();
+  const storage = {
+    getItem(key) { try { return window.localStorage.getItem(key); } catch { return memoryStorage.has(key) ? memoryStorage.get(key) : null; } },
+    setItem(key, value) { try { window.localStorage.setItem(key, value); } catch { memoryStorage.set(key, String(value)); } },
+    removeItem(key) { try { window.localStorage.removeItem(key); } catch { memoryStorage.delete(key); } }
+  };
+
+  const defaults = {
+    profiles: [{ id: crypto.randomUUID?.() || 'crew', name: 'Crew', patch: 'C', xp: 0, saved: [], quizWins: 0, transitWins: 0, missions: 0, learned: [], achievements: [], apodViewed: false, observed: false }],
+    activeProfile: 0,
+    lastVisit: '',
+    streak: 0,
+    missionDay: '',
+    missionAccepted: false,
+    missionCompleted: false,
+    depth: 'young',
+    topic: 'all'
+  };
+
+  function loadState() {
+    try {
+      const raw = JSON.parse(storage.getItem(STORAGE_KEY) || '{}');
+      const merged = { ...defaults, ...raw };
+      if (!Array.isArray(merged.profiles) || !merged.profiles.length) merged.profiles = structuredClone(defaults.profiles);
+      merged.activeProfile = Math.min(Math.max(0, Number(merged.activeProfile) || 0), merged.profiles.length - 1);
+      merged.profiles = merged.profiles.map((p, i) => ({ ...structuredClone(defaults.profiles[0]), ...p, id: p.id || `profile-${i}`, saved: Array.isArray(p.saved) ? p.saved : [], learned: Array.isArray(p.learned) ? p.learned : [], achievements: Array.isArray(p.achievements) ? p.achievements : [] }));
+      return merged;
+    } catch { return structuredClone(defaults); }
+  }
+  const state = loadState();
+  const profile = () => state.profiles[state.activeProfile];
+  function persist() { storage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+  function updateStreak() {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (state.lastVisit !== DAY) state.streak = state.lastVisit === yesterday ? state.streak + 1 : 1;
+    state.lastVisit = DAY;
+    if (state.missionDay !== DAY) { state.missionDay = DAY; state.missionAccepted = false; state.missionCompleted = false; }
+    persist();
+  }
+  updateStreak();
+
+  const safeText = value => String(value ?? '');
+  const safeUrl = value => {
+    try { const u = new URL(value, location.href); return ['http:', 'https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; }
+  };
+  const dateLabel = value => {
+    if (!value) return 'Date unavailable';
+    const d = new Date(value); return Number.isNaN(d.valueOf()) ? saf

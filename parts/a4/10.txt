@@ -1,0 +1,19 @@
+0; y += 60) { ctx.beginPath(); ctx.moveTo(38, y); ctx.lineTo(w - 28, y); ctx.stroke(); }
+    ctx.strokeStyle = '#72e8ff'; ctx.shadowColor = '#72e8ff'; ctx.shadowBlur = 12; ctx.lineWidth = 5; ctx.beginPath(); transit.points.forEach((y, i) => { const x = 38 + (i / 180) * (w - 66); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.shadowBlur = 0;
+    const cx = 38 + transit.cursor * (w - 66); ctx.strokeStyle = '#ffd67a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, 38); ctx.lineTo(cx, h - 26); ctx.stroke(); ctx.fillStyle = '#ffd67a'; ctx.beginPath(); ctx.arc(cx, transit.points[Math.round(transit.cursor * 180)], 9, 0, Math.PI * 2); ctx.fill();
+  }
+  function selectTransit() { const ok = Math.abs(transit.cursor - transit.dip) < .06; $('#transitFeedback').textContent = ok ? 'Planet found. That repeating dip is the transit signal.' : 'Not quite. Move toward the deepest dip in the curve.'; if (ok) { profile().transitWins += 1; addXp(30, 'Found a simulated planet'); generateTransit(); } }
+  canvas.onclick = e => { const rect = canvas.getBoundingClientRect(); transit.cursor = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)); drawTransit(); selectTransit(); };
+  canvas.onkeydown = e => { if (e.key === 'ArrowLeft') { e.preventDefault(); transit.cursor = Math.max(0, transit.cursor - .02); drawTransit(); } if (e.key === 'ArrowRight') { e.preventDefault(); transit.cursor = Math.min(1, transit.cursor + .02); drawTransit(); } if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTransit(); } };
+  $('#transitLeft').onclick = () => { transit.cursor = Math.max(0, transit.cursor - .03); drawTransit(); };
+  $('#transitRight').onclick = () => { transit.cursor = Math.min(1, transit.cursor + .03); drawTransit(); };
+  $('#transitSelect').onclick = selectTransit; $('#newTransit').onclick = generateTransit;
+
+  function missionOfDay() { return DATA.missions[Math.abs([...DAY].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) % DATA.missions.length]; }
+  function renderMission() {
+    const mission = missionOfDay(); $('#missionDate').textContent = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date()); $('#missionTitle').textContent = mission.title; $('#missionText').textContent = mission.text; const button = $('#acceptMission'); button.textContent = state.missionCompleted ? 'Mission complete ✓' : state.missionAccepted ? 'Mark complete' : 'Accept mission'; button.disabled = state.missionCompleted;
+  }
+  $('#acceptMission').onclick = () => { if (!state.missionAccepted) { state.missionAccepted = true; persist(); renderMission(); toast('Mission accepted. Explore together.'); return; } if (!state.missionCompleted) { state.missionCompleted = true; profile().missions += 1; addXp(40, 'Completed family mission'); renderMission(); } };
+
+  function renderProfiles() {
+    const list = $('#profileList'); list.replaceChildren(...state.profiles.map((p, index) => { const button = document.createEl

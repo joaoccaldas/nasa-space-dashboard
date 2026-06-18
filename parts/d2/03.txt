@@ -1,0 +1,21 @@
+runs out of fuel","A planet blocks a tiny part of its light","Earth blocks the telescope"],correct:1,explain:"A transit is a miniature eclipse. Its depth and timing help estimate a planet's size and orbit."},
+    {q:"What makes an object such as 3I/ATLAS interstellar?",a:["It contains ice","Its path is not bound to the Sun","It passed near Mars"],correct:1,explain:"A hyperbolic path shows the object arrived from outside the Solar System and will leave again."},
+    {q:"What is strong evidence that ancient Mars had liquid water?",a:["Its red colour","Valleys and water-altered minerals","Its two small moons"],correct:1,explain:"Water-carved landforms and altered minerals preserve evidence of wetter ancient environments."},
+    {q:"Why are many space telescope images shown in false colour?",a:["To make them fictional","To map invisible wavelengths or physical properties","Because cameras cannot detect colour"],correct:1,explain:"Scientists assign visible colours to infrared, X-ray or other measurements so patterns can be interpreted."},
+    {q:"What protects evidence on the Moon for billions of years?",a:["Frequent rain","Very little atmosphere and weather","A magnetic ocean"],correct:1,explain:"Without wind and rain, many lunar surface features change extremely slowly."},
+    {q:"What does a light-year measure?",a:["Time","Brightness","Distance"],correct:2,explain:"A light-year is the distance light travels in one year, about 9.46 trillion kilometres."},
+    {q:"Which method measures a star's tiny motion caused by an orbiting planet?",a:["Radial velocity","Meteor counting","Solar eclipses"],correct:0,explain:"Radial velocity detects repeated Doppler shifts as the star moves toward and away from us."},
+    {q:"Why do astronomers use several lines of evidence for possible life?",a:["One signal can have non-biological explanations","Telescopes only work twice","Planets change names"],correct:0,explain:"Independent evidence reduces the risk of mistaking chemistry, geology or instruments for biology."}
+  ],
+  achievements:[
+    {id:"first-look",icon:"✦",title:"First light",text:"Open a live daily discovery",test:s=>s.apodViewed},
+    {id:"curator",icon:"♡",title:"Cosmic curator",text:"Save three discoveries",test:s=>s.saved.length>=3},
+    {id:"scholar",icon:"◫",title:"Knowledge navigator",text:"Open four learning cards",test:s=>s.learned.length>=4},
+    {id:"quiz",icon:"△",title:"Orbit ace",text:"Answer three quiz questions correctly",test:s=>s.quizWins>=3},
+    {id:"transit",icon:"◎",title:"Planet hunter",text:"Find a simulated transit",test:s=>s.transitWins>=1},
+    {id:"streak",icon:"☄",title:"Return trajectory",text:"Build a three-day streak",test:s=>s.streak>=3},
+    {id:"observer",icon:"⌕",title:"Near-Earth watcher",text:"Open the observation section",test:s=>s.observed},
+    {id:"mission",icon:"⬡",title:"Family mission",text:"Complete a daily mission",test:s=>s.missions>=1}
+  ],
+  missions:[
+    {title:"Find a world stranger than Earth",text:"Se

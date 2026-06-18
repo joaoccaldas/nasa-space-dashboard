@@ -1,0 +1,49 @@
+reason) {
+    profile().xp += amount;
+    persist(); updateProfileUI(); evaluateAchievements();
+    toast(`+${amount} XP · ${reason}`);
+  }
+  function updateProfileUI() {
+    const p = profile(); const [rank, next] = rankFor(p.xp);
+    $('#activeAvatar').textContent = p.patch; $('#activeName').textContent = p.name; $('#activeRank').textContent = rank;
+    $('#heroStreak').textContent = state.streak; $('#heroXp').textContent = p.xp; $('#progressXp').textContent = p.xp; $('#quizXp').textContent = p.xp;
+    $('#rankPill').textContent = rank; $('#nextRank').textContent = p.xp >= 900 ? 'Highest current rank achieved' : `${Math.max(0, next - p.xp)} XP to next rank`;
+    const previous = rank === 'Cadet' ? 0 : rank === 'Explorer' ? 100 : rank === 'Planet Hunter' ? 250 : rank === 'Cosmic Navigator' ? 500 : 900;
+    const percent = p.xp >= 900 ? 100 : Math.max(0, Math.min(100, ((p.xp - previous) / (next - previous)) * 100));
+    $('#progressRing').style.setProperty('--progress', `${percent * 3.6}deg`);
+    $('#progressSaved').textContent = p.saved.length; $('#progressQuiz').textContent = p.quizWins; $('#progressAchievements').textContent = p.achievements.length;
+    $('#savedCount').textContent = p.saved.length;
+  }
+
+  function evaluateAchievements() {
+    const p = profile(); const snapshot = { ...p, streak: state.streak };
+    let unlocked = false;
+    DATA.achievements.forEach(a => { if (a.test(snapshot) && !p.achievements.includes(a.id)) { p.achievements.push(a.id); unlocked = true; setTimeout(() => toast(`Mission patch unlocked · ${a.title}`), 300); } });
+    if (unlocked) persist();
+    renderAchievements();
+  }
+  function renderAchievements() {
+    const p = profile(); const host = $('#achievementGrid'); if (!host) return;
+    host.replaceChildren(...DATA.achievements.map(a => {
+      const article = document.createElement('article'); article.className = `achievement ${p.achievements.includes(a.id) ? 'unlocked' : ''}`;
+      article.innerHTML = `<span class="badge-icon" aria-hidden="true">${a.icon}</span><h3></h3><p></p>`;
+      $('h3', article).textContent = a.title; $('p', article).textContent = a.text; return article;
+    }));
+  }
+
+  function updateNetwork() {
+    const offline = !navigator.onLine; $('#offlineBanner').hidden = !offline; $('#liveSignal').textContent = offline ? 'Exploring cached space' : 'Connected to the cosmos';
+  }
+  addEventListener('online', () => { updateNetwork(); toast('Back online'); loadAPOD(); loadNews(); loadNeo(); });
+  addEventListener('offline', updateNetwork); updateNetwork();
+
+  async function loadAPOD(force = false) {
+    const host = $('#apodCard');
+    const cached = !force && getCache('apod', 12 * 3600000);
+    let data = cached;
+    if (!data && navigator.onLine) {
+      try { data = await fetchJSON('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&thumbs=true'); setCache('apod', data); }
+      catch { data = DATA.fallbackApod; }
+    }
+    data ||= DATA.fallbackApod;
+    const mediaUrl = safeUrl(data.hdu

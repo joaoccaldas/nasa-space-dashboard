@@ -1,0 +1,24 @@
+an><a class="source-link" target="_blank" rel="noopener noreferrer">Read ↗</a></div>`;
+      $('h3', article).textContent = item.title || 'Space update'; $('p', article).textContent = safeText(item.summary).slice(0, 240); $('.news-meta span', article).textContent = `${item.news_site || item.source || 'Source'} · ${item.published_at?.includes?.('T') ? timeAgo(item.published_at) : safeText(item.published_at)}`; $('a', article).href = safeUrl(item.url) || '#'; return article;
+    }));
+  }
+
+  let searchController;
+  async function searchImages(query = 'James Webb', force = false) {
+    query = query.trim().slice(0, 80) || 'space'; const host = $('#imageGrid'); $('#searchHeading').textContent = `Results for “${query}”`; $('#searchStatus').textContent = 'Searching…';
+    host.replaceChildren(...Array.from({ length: 8 }, () => { const d = document.createElement('div'); d.className = 'media-card skeleton'; return d; }));
+    const key = `images:${query.toLowerCase()}`; const cached = !force && getCache(key, 24 * 3600000);
+    let items = cached;
+    if (!items) {
+      searchController?.abort(); searchController = new AbortController();
+      try { const response = await fetchJSON(`https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=image&page_size=24`, { signal: searchController.signal }); items = response.collection?.items || []; setCache(key, items); }
+      catch (error) { if (error.name === 'AbortError') return; items = []; }
+    }
+    $('#searchStatus').textContent = `${items.length} visual discoveries${cached ? ' · cached' : ''}`; host.replaceChildren();
+    if (!items.length) { const empty = document.createElement('div'); empty.className = 'error-state'; empty.innerHTML = '<b>No signal found</b><span>Try a broader search such as Moon, Mars or nebula.</span>'; const retry = document.createElement('button'); retry.className = 'button secondary retry-button'; retry.textContent = 'Search again'; retry.onclick = () => searchImages(query, true); empty.append(retry); host.append(empty); return; }
+    items.slice(0, 24).forEach((item, index) => {
+      const meta = item.data?.[0] || {}; const image = safeUrl(item.links?.find(l => l.render === 'image')?.href || item.links?.[0]?.href); if (!image) return;
+      const entry = { id: meta.nasa_id || `${query}-${index}`, title: meta.title || 'NASA image', description: safeText(meta.description || meta.description_508), image, source: safeUrl(item.href || `https://images.nasa.gov/details-${meta.nasa_id || ''}`), date: meta.date_created || '' };
+      const card = document.createElement('article'); card.className = 'media-card'; card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', `Open ${entry.title}`);
+      const img = new Image(); img.src = entry.image; img.alt = entry.title; img.loading = 'lazy'; img.decoding = 'async';
+      const overlay = document.createElement('div'); overlay.className = 'media-overlay'; overlay.innerHTML = '<span class="status

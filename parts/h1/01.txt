@@ -1,0 +1,44 @@
+
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="offline-banner" id="offlineBanner" role="status" aria-live="polite" hidden>
+    <span>Offline mode</span><small>Saved discoveries and cached content are still available.</small>
+  </div>
+
+  <header class="app-header" aria-label="Primary header">
+    <a class="brand" href="#home" data-route="home" aria-label="CaldaSpace home">
+      <img src="assets/logo.svg" alt="" width="44" height="44">
+      <span><b>Calda</b>Space<small>Space, together</small></span>
+    </a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <button data-route="home" class="active"><span aria-hidden="true">⌂</span>Home</button>
+      <button data-route="discover"><span aria-hidden="true">✦</span>Discover</button>
+      <button data-route="learn"><span aria-hidden="true">◫</span>Learn</button>
+      <button data-route="observe"><span aria-hidden="true">◎</span>Observe</button>
+      <button data-route="play"><span aria-hidden="true">△</span>Play</button>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-button" id="savedOpen" aria-label="Open saved discoveries" title="Saved discoveries"><span aria-hidden="true">♡</span><span class="count-badge" id="savedCount">0</span></button>
+      <button class="profile-button" id="profileOpen" aria-haspopup="dialog"><span class="avatar" id="activeAvatar">C</span><span class="profile-copy"><b id="activeName">Crew</b><small id="activeRank">Cadet</small></span></button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="view active" id="home" aria-labelledby="homeTitle">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <div class="signal"><i></i><span id="liveSignal">Connected to the cosmos</span></div>
+          <p class="eyebrow">Your family space station</p>
+          <h1 id="homeTitle" tabindex="-1">The universe is bigger when you explore it <em>together.</em></h1>
+          <p class="lede">Live discoveries, extraordinary images, honest science and small family missions in one calm cosmic home.</p>
+          <div class="action-row">
+            <button class="button primary" data-route="discover">Start exploring <span aria-hidden="true">→</span></button>
+            <button class="button secondary" data-route="play">Play today’s mission</button>
+          </div>
+          <div class="trust-row" aria-label="Data classifications">
+            <span class="status live">Live</span><span class="status verified">Verified</span><span class="status simulated">Simulated</span>
+          </div>
+        </div>
+        <div class="hero-art card-glow">
+          <img src="assets/hero-orbit.svg" alt="Abstract family space station orbiting a luminous planet" width="900" height="720">
+          <div class="orbital-stat stat-a"><small>Objects tracked</small><b id="heroObjectCount">Connecting…</b></div>
+          <div class="orbital-stat stat-b"><small>Family streak</small><b><span id="heroStreak">1</span> days<

@@ -1,0 +1,7 @@
+arch the NASA archive for an exoplanet or unusual moon. Save one image and explain what surprised you."},
+    {title:"Build a three-image Mars story",text:"Find a landscape, a rover and an orbital image. Save all three and tell the story of a day on Mars."},
+    {title:"Compare two cosmic scales",text:"Choose one nearby object and one deep-space object. Explain which is larger and which is farther away."},
+    {title:"Become a careful theory detective",text:"Open the Theory Lab and compare an established idea with a speculative one. Explain the evidence difference."},
+    {title:"Look up together",text:"Spend five minutes outside after sunset. Find the Moon, a bright planet or a familiar constellation."}
+  ]
+};

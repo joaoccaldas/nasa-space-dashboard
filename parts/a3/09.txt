@@ -1,0 +1,16 @@
+approach.close_approach_date) : 'Date unavailable'; $('p', article).textContent = `${lunar ? lunar.toFixed(1) : '—'} lunar distances · ${velocity ? velocity.toFixed(1) : '—'} km/s · ${min && max ? `${Math.round(min)}–${Math.round(max)} m` : 'Size uncertain'}`; $('.distance-bar i', article).style.setProperty('--distance', `${Math.max(5, Math.min(100, 100 - lunar * 8))}%`); return article;
+    }));
+  }
+  $('#atlasExplain').onclick = () => { $('#infoTitle').textContent = 'Why 3I/ATLAS is interstellar'; $('#infoBody').innerHTML = '<p>Objects bound to the Sun follow closed elliptical paths. 3I/ATLAS follows an open hyperbolic trajectory with enough incoming speed that the Sun cannot capture it.</p><p>The prefix <b>3I</b> means it is the third confirmed interstellar object, after 1I/ʻOumuamua and 2I/Borisov.</p><p class="privacy-note">This profile is historical reference content, not a live ephemeris.</p>'; $('#infoDialog').showModal(); };
+
+  let quizIndex = Math.abs([...DAY].reduce((a, c) => a + c.charCodeAt(0), 0)) % DATA.quiz.length;
+  function renderQuiz() {
+    const q = DATA.quiz[quizIndex % DATA.quiz.length]; const host = $('#quizHost'); host.replaceChildren(); const question = document.createElement('p'); question.className = 'quiz-question'; question.textContent = q.q; const answers = document.createElement('div'); answers.className = 'answers'; const explanation = document.createElement('p'); explanation.className = 'explanation';
+    q.a.forEach((answer, index) => { const button = document.createElement('button'); button.className = 'answer'; button.textContent = answer; button.onclick = () => { const correct = index === q.correct; $$('.answer', answers).forEach((b, i) => { b.disabled = true; if (i === q.correct) b.classList.add('correct'); else if (i === index) b.classList.add('incorrect'); }); explanation.textContent = q.explain; if (correct) { profile().quizWins += 1; addXp(20, 'Correct orbit answer'); } else { persist(); } setTimeout(() => { quizIndex = (quizIndex + 1) % DATA.quiz.length; renderQuiz(); }, 2600); }; answers.append(button); }); host.append(question, answers, explanation);
+  }
+
+  const canvas = $('#transitCanvas'); const ctx = canvas.getContext('2d'); let transit = { dip: .55, cursor: .5, points: [] };
+  function generateTransit() { transit.dip = .2 + Math.random() * .6; transit.cursor = .5; transit.points = Array.from({ length: 181 }, (_, i) => { const x = i / 180; return 154 + Math.sin(i * .23) * 4 + (Math.random() - .5) * 8 + Math.exp(-Math.pow((x - transit.dip) / .035, 2)) * 104; }); drawTransit(); $('#transitFeedback').textContent = 'Find the most likely transit.'; }
+  function drawTransit() {
+    const w = canvas.width, h = canvas.height; ctx.clearRect(0, 0, w, h); const grad = ctx.createLinearGradient(0, 0, w, h); grad.addColorStop(0, '#080b22'); grad.addColorStop(1, '#10153a'); ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; for (let y = 60; y < h - 3

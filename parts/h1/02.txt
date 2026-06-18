@@ -1,0 +1,46 @@
+/b></div>
+          <div class="orbital-stat stat-c"><small>Crew XP</small><b><span id="heroXp">0</span> XP</b></div>
+        </div>
+      </div>
+
+      <div class="shell section-block">
+        <div class="section-heading">
+          <div><p class="eyebrow">Today in space</p><h2>A window into the universe</h2></div>
+          <button class="text-button" id="refreshApod">Refresh <span aria-hidden="true">↻</span></button>
+        </div>
+        <article class="feature-panel skeleton-host" id="apodCard" aria-live="polite">
+          <div class="skeleton media-skeleton"></div><div class="feature-copy"><div class="skeleton line short"></div><div class="skeleton line title"></div><div class="skeleton line"></div><div class="skeleton line"></div></div>
+        </article>
+      </div>
+
+      <div class="shell section-block">
+        <div class="section-heading">
+          <div><p class="eyebrow">Space pulse</p><h2>What is happening now</h2></div>
+          <span class="freshness" id="newsFreshness">Updating…</span>
+        </div>
+        <div class="horizontal-cards" id="newsCards" aria-live="polite"></div>
+      </div>
+
+      <div class="shell split-section section-block">
+        <article class="mission-card">
+          <div class="mission-copy">
+            <span class="status mission">Daily family mission</span>
+            <p class="eyebrow" id="missionDate"></p>
+            <h2 id="missionTitle">Find a world stranger than Earth</h2>
+            <p id="missionText">Explore one discovery, save it and explain what surprised you to someone in your crew.</p>
+            <div class="action-row"><button class="button primary" id="acceptMission">Accept mission</button><span class="reward">+40 XP</span></div>
+          </div>
+          <img src="assets/mission-badge.svg" alt="CaldaSpace daily family mission badge" width="320" height="320">
+        </article>
+        <article class="progress-card">
+          <div class="section-heading compact"><div><p class="eyebrow">Crew progress</p><h2>This orbit</h2></div><span class="rank-pill" id="rankPill">Cadet</span></div>
+          <div class="progress-ring-wrap"><div class="progress-ring" id="progressRing"><span><b id="progressXp">0</b><small>XP</small></span></div><div><h3 id="nextRank">40 XP to Explorer</h3><p>Learn, save and play to advance your crew.</p></div></div>
+          <div class="mini-stats"><div><b id="progressSaved">0</b><small>Saved</small></div><div><b id="progressQuiz">0</b><small>Quiz wins</small></div><div><b id="progressAchievements">0</b><small>Badges</small></div></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view" id="discover" aria-labelledby="discoverTitle">
+      <div class="shell page-intro"><p class="eyebrow">Discover</p><h1 id="discoverTitle" tabindex="-1">Search the visual universe.</h1><p>Explore NASA’s public image archive, then keep the discoveries your family wants to revisit.</p></div>
+      <div class="shell search-panel">
+        <label for="imageSe

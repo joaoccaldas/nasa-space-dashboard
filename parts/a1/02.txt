@@ -1,0 +1,60 @@
+eText(value) : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(d);
+  };
+  const timeAgo = value => {
+    const ms = Date.now() - new Date(value).valueOf();
+    if (!Number.isFinite(ms)) return safeText(value || '');
+    const h = Math.max(1, Math.round(ms / 3600000));
+    return h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
+  };
+
+  let toastTimer;
+  function toast(message) {
+    const el = $('#toast'); el.textContent = message; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  function getCache(key, maxAge) {
+    try {
+      const cache = JSON.parse(storage.getItem(CACHE_KEY) || '{}');
+      const item = cache[key];
+      return item && Date.now() - item.time < maxAge ? item.data : null;
+    } catch { return null; }
+  }
+  function setCache(key, data) {
+    try {
+      const cache = JSON.parse(storage.getItem(CACHE_KEY) || '{}');
+      cache[key] = { time: Date.now(), data };
+      storage.setItem(CACHE_KEY, JSON.stringify(cache));
+    } catch { /* Storage can be unavailable in private contexts. */ }
+  }
+  async function fetchJSON(url, { signal, timeout = 12000 } = {}) {
+    const controller = signal ? null : new AbortController();
+    const timer = controller ? setTimeout(() => controller.abort(), timeout) : null;
+    try {
+      const response = await fetch(url, { signal: signal || controller.signal, headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      return response.json();
+    } finally { if (timer) clearTimeout(timer); }
+  }
+
+  function route(name, { focus = true } = {}) {
+    if (!ROUTES.includes(name)) name = 'home';
+    $$('.view').forEach(view => view.classList.toggle('active', view.id === name));
+    $$('[data-route]').forEach(button => { const active = button.dataset.route === name; button.classList.toggle('active', active); if (button.closest('nav')) button.setAttribute('aria-current', active ? 'page' : 'false'); });
+    history.replaceState(null, '', `#${name}`);
+    document.title = `CaldaSpace | ${name[0].toUpperCase()}${name.slice(1)}`;
+    if (name === 'observe') { profile().observed = true; evaluateAchievements(); persist(); }
+    if (focus) { scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); setTimeout(() => $(`#${name} h1`)?.focus?.(), 20); }
+  }
+  $$('[data-route]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); route(el.dataset.route); }));
+  addEventListener('hashchange', () => route(location.hash.slice(1), { focus: false }));
+  route(location.hash.slice(1) || 'home', { focus: false });
+
+  function rankFor(xp) {
+    if (xp >= 900) return ['Mission Commander', 1200];
+    if (xp >= 500) return ['Cosmic Navigator', 900];
+    if (xp >= 250) return ['Planet Hunter', 500];
+    if (xp >= 100) return ['Explorer', 250];
+    return ['Cadet', 100];
+  }
+  function addXp(amount, 

@@ -1,0 +1,16 @@
+ird confirmed object known to have entered from beyond our Solar System. Its open hyperbolic path is the clue that it was never gravitationally bound to the Sun.</p><div class="data-grid"><div><small>Discovered</small><b>1 July 2025</b></div><div><small>Classification</small><b>Interstellar comet</b></div><div><small>Perihelion</small><b>≈ 1.4 au</b></div><div><small>Earth distance</small><b>≈ 1.8 au</b></div></div><div class="action-row"><button class="button secondary" id="atlasExplain">Explain its path</button><a class="button primary" href="https://science.nasa.gov/solar-system/comets/3i-atlas/" target="_blank" rel="noopener noreferrer">NASA profile ↗</a></div></div>
+      </div>
+      <div class="shell section-block">
+        <div class="section-heading"><div><p class="eyebrow">Near-Earth watch</p><h2>Upcoming close approaches</h2></div><span class="status live">Live · NASA</span></div>
+        <div class="object-grid" id="neoGrid" aria-live="polite"></div>
+      </div>
+      <div class="shell observation-card"><div><p class="eyebrow">Look up tonight</p><h2>Observation starter</h2><p>Begin with the Moon, bright planets and constellations. No telescope is required. Give your eyes 15 minutes to adjust and keep a red light nearby.</p></div><ul><li>Check cloud cover and sunset time</li><li>Move away from direct lights</li><li>Use binoculars before buying a telescope</li></ul></div>
+    </section>
+
+    <section class="view" id="play" aria-labelledby="playTitle">
+      <div class="shell page-intro"><p class="eyebrow">Play</p><h1 id="playTitle" tabindex="-1">Turn curiosity into a family game.</h1><p>Short challenges, honest simulations and progress that stays on this device.</p></div>
+      <div class="shell game-grid">
+        <article class="game-card quiz-card"><div class="game-header"><div><span class="status mission">Daily challenge</span><h2>Orbit quiz</h2></div><div class="score-orb"><b id="quizXp">0</b><small>XP</small></div></div><div id="quizHost"></div></article>
+        <article class="game-card transit-card"><div class="game-header"><div><span class="status simulated">Simulated</span><h2>Transit lab</h2></div><button class="icon-button" id="newTransit" aria-label="Generate a new transit curve">↻</button></div><p>A planet passing in front of its star creates a tiny dip in brightness. Tap the deepest dip.</p><canvas id="transitCanvas" width="960" height="380" aria-label="Simulated star brightness curve. Choose the deepest dip." tabindex="0"></canvas><div class="transit-controls"><button class="button secondary" id="transitLeft">Move left</button><button class="button primary" id="transitSelect">Select point</button><button class="button secondary" id="transitRight">Move right</button></div><p id="transitFeedback" class="feedback" role="status" aria-live="polite">Find the most likely transit.</p></article>
+      </div>
+      <div class="shell section-block"><div class="section-heading"><div><p class="eyebrow">Mission patches</p><h2>Achiev

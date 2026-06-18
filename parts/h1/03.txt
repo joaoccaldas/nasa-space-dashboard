@@ -1,0 +1,28 @@
+arch">Search NASA’s image library</label>
+        <div class="search-row"><input id="imageSearch" type="search" inputmode="search" autocomplete="off" placeholder="Try Saturn, Artemis, black hole…"><button class="button primary" id="imageSearchButton">Explore</button></div>
+        <div class="chip-row" aria-label="Suggested searches"><button class="chip" data-query="James Webb">James Webb</button><button class="chip" data-query="Mars rover">Mars</button><button class="chip" data-query="Nebula">Nebulae</button><button class="chip" data-query="Moon Artemis">Moon</button><button class="chip" data-query="Earth from space">Earth</button></div>
+      </div>
+      <div class="shell section-block">
+        <div class="section-heading"><div><p class="eyebrow">NASA archive</p><h2 id="searchHeading">Featured discoveries</h2></div><span class="freshness" id="searchStatus" role="status" aria-live="polite"></span></div>
+        <div class="media-grid" id="imageGrid"></div>
+      </div>
+    </section>
+
+    <section class="view" id="learn" aria-labelledby="learnTitle">
+      <div class="shell page-intro"><p class="eyebrow">Learn</p><h1 id="learnTitle" tabindex="-1">Big ideas, clear explanations.</h1><p>Choose the depth that fits your crew. Every theory is labelled by its evidence, not by how exciting it sounds.</p></div>
+      <div class="shell learning-toolbar" aria-label="Learning controls">
+        <div class="segmented" role="group" aria-label="Explanation depth"><button data-depth="young" class="active">Young explorer</button><button data-depth="deep">Go deeper</button></div>
+        <div class="chip-row" id="topicFilters"><button class="chip active" data-topic="all">Everything</button><button class="chip" data-topic="universe">Universe</button><button class="chip" data-topic="solar">Solar system</button><button class="chip" data-topic="life">Life</button><button class="chip" data-topic="missions">Missions</button></div>
+      </div>
+      <div class="shell knowledge-grid" id="knowledgeGrid"></div>
+      <div class="shell section-block">
+        <div class="section-heading"><div><p class="eyebrow">Theory lab</p><h2>Know, suspect, imagine</h2></div><button class="text-button" id="evidenceHelp">How labels work</button></div>
+        <div class="theory-grid" id="theoryGrid"></div>
+      </div>
+    </section>
+
+    <section class="view" id="observe" aria-labelledby="observeTitle">
+      <div class="shell page-intro"><p class="eyebrow">Observe</p><h1 id="observeTitle" tabindex="-1">Watch our cosmic neighbourhood.</h1><p>Track close approaches, meet interstellar visitors and learn what can be seen from home.</p></div>
+      <div class="shell atlas-panel">
+        <div class="atlas-visual" aria-hidden="true"><div class="atlas-comet"></div><div class="atlas-tail"></div><div class="atlas-orbit"></div></div>
+        <div class="atlas-copy"><span class="status verified">Historical observatory</span><p class="eyebrow">Interstellar object 03</p><h2>3I/ATLAS</h2><p>The th
