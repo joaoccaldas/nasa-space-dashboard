@@ -1,0 +1,21 @@
+ements</h2></div></div><div class="achievement-grid" id="achievementGrid"></div></div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button data-route="home" class="active"><span aria-hidden="true">⌂</span><small>Home</small></button>
+    <button data-route="discover"><span aria-hidden="true">✦</span><small>Discover</small></button>
+    <button data-route="learn"><span aria-hidden="true">◫</span><small>Learn</small></button>
+    <button data-route="observe"><span aria-hidden="true">◎</span><small>Observe</small></button>
+    <button data-route="play"><span aria-hidden="true">△</span><small>Play</small></button>
+  </nav>
+
+  <dialog class="modal" id="profileDialog" aria-labelledby="profileTitle">
+    <form method="dialog" class="modal-card" id="profileForm"><div class="modal-header"><div><p class="eyebrow">Explorer profiles</p><h2 id="profileTitle">Who is exploring?</h2></div><button class="icon-button" value="cancel" aria-label="Close profile settings">×</button></div><div id="profileList" class="profile-list"></div><hr><label for="profileName">Explorer name</label><input id="profileName" maxlength="20" placeholder="Name or crew nickname"><label for="profilePatch">Mission patch</label><div class="patch-row" id="patchRow"></div><input id="profilePatch" maxlength="2" placeholder="C or 🚀"><div class="modal-actions"><button class="button secondary" type="button" id="addProfile">Add profile</button><button class="button primary" value="save">Save</button></div><p class="privacy-note">Profiles, XP, favourites and settings stay in this browser. CaldaSpace does not send personal data anywhere.</p></form>
+  </dialog>
+
+  <dialog class="modal" id="savedDialog" aria-labelledby="savedTitle"><div class="modal-card wide"><div class="modal-header"><div><p class="eyebrow">Your library</p><h2 id="savedTitle">Saved discoveries</h2></div><button class="icon-button" id="savedClose" aria-label="Close saved discoveries">×</button></div><div class="saved-grid" id="savedGrid"></div></div></dialog>
+  <dialog class="modal" id="mediaDialog" aria-labelledby="mediaTitle"><div class="modal-card wide"><div class="modal-header"><span class="status verified">NASA media</span><button class="icon-button" id="mediaClose" aria-label="Close media viewer">×</button></div><img id="mediaImage" alt="" width="1200" height="800"><h2 id="mediaTitle"></h2><p id="mediaDescription"></p><div class="modal-actions"><button class="button secondary" id="mediaSave">Save discovery</button><a class="button primary" id="mediaSource" target="_blank" rel="noopener noreferrer">Open source</a></div></div></dialog>
+  <dialog class="modal" id="infoDialog" aria-labelledby="infoTitle"><div class="modal-card"><div class="modal-header"><h2 id="infoTitle">About this evidence label</h2><button class="icon-button" id="infoClose" aria-label="Close explanation">×</button></div><div id="infoBody"></div></div></dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="po

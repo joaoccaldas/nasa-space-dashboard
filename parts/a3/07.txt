@@ -1,0 +1,22 @@
+ontent = 'Remove'; remove.onclick = () => toggleSaved(item); body.append(title, remove); card.onclick = e => { if (e.target !== remove) openMedia(item); }; card.append(img, body); host.append(card); });
+  }
+  $('#savedOpen').onclick = () => { renderSaved(); $('#savedDialog').showModal(); };
+  $('#savedClose').onclick = () => $('#savedDialog').close();
+
+  function renderKnowledge() {
+    const p = profile(); const host = $('#knowledgeGrid'); const list = DATA.knowledge.filter(item => state.topic === 'all' || item.topic === state.topic); host.replaceChildren(...list.map(item => {
+      const article = document.createElement('article'); article.className = 'knowledge-card'; article.style.setProperty('--card-glow', item.color); article.tabIndex = 0;
+      article.innerHTML = `<span class="symbol" aria-hidden="true">${item.symbol}</span><h3></h3><p></p><footer><span class="status verified">Trusted explainer</span><button class="listen-button">Listen</button></footer>`;
+      $('h3', article).textContent = item.title; $('p', article).textContent = item[state.depth];
+      const mark = () => { if (!p.learned.includes(item.id)) { p.learned.push(item.id); addXp(5, 'Learned something new'); } };
+      article.addEventListener('click', mark); article.addEventListener('keydown', e => { if (e.key === 'Enter') mark(); });
+      $('.listen-button', article).onclick = e => { e.stopPropagation(); if (!('speechSynthesis' in window)) { toast('Read-aloud is not supported in this browser'); return; } speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(`${item.title}. ${item[state.depth]}`); utterance.rate = .95; speechSynthesis.speak(utterance); mark(); };
+      return article;
+    }));
+  }
+  $$('[data-depth]').forEach(button => button.onclick = () => { state.depth = button.dataset.depth; $$('[data-depth]').forEach(b => b.classList.toggle('active', b === button)); persist(); renderKnowledge(); });
+  $$('[data-topic]').forEach(button => button.onclick = () => { state.topic = button.dataset.topic; $$('[data-topic]').forEach(b => b.classList.toggle('active', b === button)); persist(); renderKnowledge(); });
+  function renderTheories() {
+    $('#theoryGrid').replaceChildren(...DATA.theories.map(item => { const article = document.createElement('article'); article.className = 'theory-card'; article.innerHTML = `<span class="status verified"></span><h3></h3><p></p><div class="evidence-meter" aria-label="Evidence strength ${item.level} of 4"></div>`; $('.status', article).textContent = item.label; $('.status', article).style.color = item.color; $('h3', article).textContent = item.title; $('p', article).textContent = item.text; const meter = $('.evidence-meter', article); meter.style.setProperty('--meter', item.color); for (let i = 1; i <= 4; i++) { const dot = document.createElement('i'); if (i <= item.level) dot.className = 'on'; meter.append(dot); } return article; }));
+  }
+  $('#evidenceHelp').onclick = () => { $('#infoTitle').textContent = 'How evide

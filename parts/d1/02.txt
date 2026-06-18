@@ -1,0 +1,15 @@
+ desert with giant volcanoes, deep canyons and strong evidence that rivers and lakes existed long ago.",deep:"Geomorphology, sedimentary rocks and hydrated minerals show that early Mars hosted persistent surface water. Today, most water is locked in ice or minerals.",color:"rgba(255,120,151,.14)"},
+    {id:"life",symbol:"⌁",title:"Life beyond Earth",topic:"life",young:"Scientists look for water, useful chemistry and energy because life as we know it needs all three.",deep:"Astrobiology studies habitability, biosignatures and life's limits. Strong claims require multiple independent lines of evidence and careful exclusion of non-biological explanations.",color:"rgba(113,229,179,.14)"},
+    {id:"telescopes",symbol:"⌕",title:"Space telescopes",topic:"missions",young:"Telescopes in space can see kinds of light that Earth's atmosphere blocks or blurs.",deep:"Observatories across radio, infrared, visible, ultraviolet, X-ray and gamma-ray wavelengths reveal different temperatures, processes and stages of cosmic evolution.",color:"rgba(114,232,255,.14)"},
+    {id:"stars",symbol:"✦",title:"How stars live",topic:"universe",young:"Gravity builds stars, nuclear fusion powers them and their mass decides how they end.",deep:"Stars form in collapsing molecular clouds. Hydrostatic balance stabilises the main sequence, while mass controls fusion pathways, lifetime and whether the remnant becomes a white dwarf, neutron star or black hole.",color:"rgba(255,214,122,.14)"}
+  ],
+  theories:[
+    {label:"Established",level:4,color:"#71e5b3",title:"Spacetime curves around mass and energy",text:"General relativity explains gravity as geometry and has passed tests involving orbital motion, lensing, time dilation and gravitational waves."},
+    {label:"Strong evidence",level:3,color:"#72e8ff",title:"Unseen matter shapes galaxies",text:"Multiple observations require additional gravitating matter. The evidence for dark matter is strong, while its particle identity remains unknown."},
+    {label:"Open question",level:2,color:"#ffd67a",title:"Life may exist beneath icy moons",text:"Europa and Enceladus appear to combine liquid water, chemistry and energy. Habitability is plausible, but life has not been detected."},
+    {label:"Speculative",level:1,color:"#ff7cb8",title:"Traversable wormholes",text:"Some mathematical solutions resemble shortcuts through spacetime. None has been observed, and known models require extreme or exotic conditions."},
+    {label:"Open question",level:2,color:"#ffd67a",title:"Some exoplanets may be ocean worlds",text:"Planet size and density can permit deep global oceans, but atmospheres and surfaces are difficult to confirm from current data."},
+    {label:"Established",level:4,color:"#71e5b3",title:"The universe is expanding",text:"Galaxy redshifts, the cosmic microwave background and other measurements show that cosmic space has expanded throughout observable history."}
+  ],
+  quiz:[
+    {q:"Why does a star dim during an exoplanet transit?",a:["It 

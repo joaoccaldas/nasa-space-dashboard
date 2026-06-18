@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="t d">
+<title id="t">CaldaSpace orbital planet logo</title><desc id="d">A luminous violet and cyan planet surrounded by a coral orbital ring.</desc>
+<defs><radialGradient id="p" cx="32%" cy="26%"><stop stop-color="#fff"/><stop offset=".18" stop-color="#8cf4ff"/><stop offset=".58" stop-color="#7367ff"/><stop offset="1" stop-color="#251450"/></radialGradient><linearGradient id="r" x1="0" x2="1"><stop stop-color="#ff7cb8"/><stop offset=".55" stop-color="#ffd67a"/><stop offset="1" stop-color="#8cf4ff"/></linearGradient><filter id="g"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<circle cx="64" cy="64" r="41" fill="url(#p)" filter="url(#g)"/><path d="M11 73c8 21 42 31 74 22 25-7 40-22 33-35" fill="none" stroke="url(#r)" stroke-width="9" stroke-linecap="round"/><path d="M14 76c-5-17 17-35 49-43 29-7 54-1 60 13" fill="none" stroke="#fff" stroke-opacity=".2" stroke-width="3"/><circle cx="98" cy="31" r="5" fill="#ffd67a"/><circle cx="23" cy="35" r="3" fill="#8cf4ff"/>
+</svg>

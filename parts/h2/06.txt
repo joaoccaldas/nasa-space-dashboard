@@ -1,0 +1,2 @@
+lite" aria-atomic="true"></div>
+  <button class="install-prompt" id="installPrompt" hidden>Install CaldaSpace</button>

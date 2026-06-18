@@ -1,0 +1,17 @@
+ement('button'); button.type = 'button'; button.className = `profile-choice ${index === state.activeProfile ? 'active' : ''}`; button.innerHTML = `<span class="avatar"></span><span><b></b><small></small></span>`; $('.avatar', button).textContent = p.patch; $('b', button).textContent = p.name; $('small', button).textContent = `${rankFor(p.xp)[0]} · ${p.xp} XP`; button.onclick = () => { state.activeProfile = index; persist(); updateProfileUI(); renderProfiles(); renderSaved(); renderAchievements(); renderKnowledge(); }; return button; }));
+    $('#profileName').value = profile().name; $('#profilePatch').value = profile().patch;
+    $('#patchRow').replaceChildren(...PATCHES.map(patch => { const button = document.createElement('button'); button.type = 'button'; button.className = `patch-option ${profile().patch === patch ? 'active' : ''}`; button.textContent = patch; button.onclick = () => { $('#profilePatch').value = patch; $$('.patch-option').forEach(b => b.classList.toggle('active', b === button)); }; return button; }));
+  }
+  $('#profileOpen').onclick = () => { renderProfiles(); $('#profileDialog').showModal(); };
+  $('#profileForm').onsubmit = event => { if (event.submitter?.value !== 'save') return; event.preventDefault(); profile().name = $('#profileName').value.trim().slice(0, 20) || 'Explorer'; profile().patch = $('#profilePatch').value.trim().slice(0, 2) || 'C'; persist(); updateProfileUI(); renderProfiles(); $('#profileDialog').close(); toast('Explorer profile saved'); };
+  $('#addProfile').onclick = () => { if (state.profiles.length >= 8) { toast('A maximum of eight local profiles is supported'); return; } state.profiles.push({ ...structuredClone(defaults.profiles[0]), id: crypto.randomUUID?.() || `profile-${Date.now()}`, name: `Explorer ${state.profiles.length + 1}`, patch: PATCHES[state.profiles.length % PATCHES.length] }); state.activeProfile = state.profiles.length - 1; persist(); renderProfiles(); updateProfileUI(); };
+
+  let installEvent;
+  addEventListener('beforeinstallprompt', event => { event.preventDefault(); installEvent = event; $('#installPrompt').hidden = false; });
+  $('#installPrompt').onclick = async () => { if (!installEvent) return; installEvent.prompt(); await installEvent.userChoice; installEvent = null; $('#installPrompt').hidden = true; };
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+
+  $$('[data-depth]').forEach(button => button.classList.toggle('active', button.dataset.depth === state.depth));
+  $$('[data-topic]').forEach(button => button.classList.toggle('active', button.dataset.topic === state.topic));
+  updateProfileUI(); renderMission(); renderKnowledge(); renderTheories(); renderQuiz(); generateTransit(); renderAchievements(); loadAPOD(); loadNews(); searchImages(); loadNeo(); evaluateAchievements();
+})();

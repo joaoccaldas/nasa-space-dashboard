@@ -1,0 +1,27 @@
+ verified">NASA archive</span><h3></h3>'; $('h3', overlay).textContent = entry.title;
+      const save = document.createElement('button'); save.className = 'save-inline'; save.type = 'button'; save.setAttribute('aria-label', `Save ${entry.title}`); save.textContent = isSaved(entry.id) ? '♥' : '♡'; save.onclick = e => { e.stopPropagation(); toggleSaved(entry); save.textContent = isSaved(entry.id) ? '♥' : '♡'; };
+      const open = () => openMedia(entry); card.onclick = open; card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
+      card.append(img, overlay, save); host.append(card);
+    });
+  }
+  $('#imageSearchButton').addEventListener('click', () => searchImages($('#imageSearch').value));
+  $('#imageSearch').addEventListener('keydown', e => { if (e.key === 'Enter') searchImages(e.target.value); });
+  $$('[data-query]').forEach(button => button.addEventListener('click', () => { $('#imageSearch').value = button.dataset.query; searchImages(button.dataset.query); }));
+
+  function isSaved(id) { return profile().saved.some(item => item.id === id); }
+  function toggleSaved(entry) {
+    const saved = profile().saved; const index = saved.findIndex(item => item.id === entry.id);
+    if (index >= 0) { saved.splice(index, 1); toast('Removed from saved discoveries'); }
+    else { saved.unshift({ ...entry, savedAt: Date.now() }); addXp(8, 'Saved a discovery'); }
+    persist(); updateProfileUI(); evaluateAchievements(); renderSaved();
+  }
+  let currentMedia = null;
+  function openMedia(entry) {
+    currentMedia = entry; $('#mediaImage').src = entry.image; $('#mediaImage').alt = entry.title; $('#mediaTitle').textContent = entry.title; $('#mediaDescription').textContent = entry.description || 'No description is available for this item.'; $('#mediaSource').href = entry.source || 'https://images.nasa.gov/'; $('#mediaSave').textContent = isSaved(entry.id) ? 'Remove from saved' : 'Save discovery'; $('#mediaDialog').showModal();
+  }
+  $('#mediaClose').onclick = () => $('#mediaDialog').close();
+  $('#mediaSave').onclick = () => { if (!currentMedia) return; toggleSaved(currentMedia); $('#mediaSave').textContent = isSaved(currentMedia.id) ? 'Remove from saved' : 'Save discovery'; };
+  function renderSaved() {
+    const host = $('#savedGrid'); host.replaceChildren(); const saved = profile().saved;
+    if (!saved.length) { const empty = document.createElement('div'); empty.className = 'empty-state'; empty.innerHTML = '<b>Your cosmic library is empty</b><span>Save discoveries from the NASA image archive to build it.</span>'; host.append(empty); return; }
+    saved.forEach(item => { const card = document.createElement('article'); card.className = 'saved-item'; const img = new Image(); img.src = item.image; img.alt = item.title; img.loading = 'lazy'; const body = document.createElement('div'); const title = document.createElement('h3'); title.textContent = item.title; const remove = document.createElement('button'); remove.textC

@@ -1,0 +1,24 @@
+rl || data.url || data.thumbnail_url) || 'assets/hero-orbit.svg';
+    const sourceUrl = data.date ? `https://apod.nasa.gov/apod/ap${data.date.replaceAll('-', '').slice(2)}.html` : 'https://apod.nasa.gov/apod/';
+    host.replaceChildren();
+    const media = document.createElement('div'); media.className = 'feature-media';
+    if (data.media_type === 'video' && safeUrl(data.url)) { const iframe = document.createElement('iframe'); iframe.src = safeUrl(data.url); iframe.title = data.title || 'NASA astronomy video'; iframe.loading = 'lazy'; iframe.allowFullscreen = true; media.append(iframe); }
+    else { const img = new Image(); img.src = mediaUrl; img.alt = data.title || 'NASA astronomy picture'; img.decoding = 'async'; img.fetchPriority = 'high'; media.append(img); }
+    const copy = document.createElement('div'); copy.className = 'feature-copy';
+    copy.innerHTML = `<span class="status ${cached ? 'verified' : data === DATA.fallbackApod ? 'verified' : 'live'}">${cached ? 'Cached · NASA APOD' : data === DATA.fallbackApod ? 'Offline fallback' : 'Live · NASA APOD'}</span><h3></h3><p></p><div class="source-row"><span class="freshness"></span><a class="source-link" target="_blank" rel="noopener noreferrer">Open source ↗</a></div>`;
+    $('h3', copy).textContent = data.title || 'Astronomy Picture of the Day'; $('p', copy).textContent = safeText(data.explanation).slice(0, 720); $('.freshness', copy).textContent = dateLabel(data.date); const link = $('a', copy); link.href = safeUrl(sourceUrl); host.append(media, copy);
+    if (!profile().apodViewed) { profile().apodViewed = true; addXp(10, 'First daily discovery'); } else { evaluateAchievements(); }
+  }
+  $('#refreshApod').addEventListener('click', () => loadAPOD(true));
+
+  async function loadNews(force = false) {
+    const host = $('#newsCards'); host.replaceChildren(...[1, 2, 3].map(() => { const d = document.createElement('div'); d.className = 'news-card'; d.innerHTML = '<div class="skeleton line short"></div><div class="skeleton line title"></div><div class="skeleton line"></div><div class="skeleton line"></div>'; return d; }));
+    const cached = !force && getCache('news', 30 * 60000); let items = cached;
+    if (!items && navigator.onLine) {
+      try { const response = await fetchJSON('https://api.spaceflightnewsapi.net/v4/articles/?limit=6'); items = response.results || []; setCache('news', items); }
+      catch { items = DATA.fallbackNews; }
+    }
+    items ||= DATA.fallbackNews; $('#newsFreshness').textContent = cached ? 'Cached recently' : `Updated ${new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(new Date())}`;
+    host.replaceChildren(...items.slice(0, 6).map(item => {
+      const article = document.createElement('article'); article.className = 'news-card';
+      article.innerHTML = `<span class="status ${items === DATA.fallbackNews ? 'verified' : 'live'}">${items === DATA.fallbackNews ? 'Official source' : 'Live news'}</span><h3></h3><p></p><div class="news-meta"><span></sp
