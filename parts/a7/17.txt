@@ -1,0 +1,25 @@
+(() => {
+  'use strict';
+  const install = document.querySelector('#installPrompt');
+  const profileForm = document.querySelector('#profileForm');
+  if (install && profileForm) {
+    install.textContent = 'Install CaldaSpace';
+    install.className = 'button secondary install-inline';
+    install.removeAttribute('style');
+    const actions = profileForm.querySelector('.modal-actions');
+    if (actions) actions.insertAdjacentElement('beforebegin', install);
+  }
+
+  const badge = document.querySelector('#savedCount');
+  if (badge) {
+    const sync = () => { badge.hidden = Number.parseInt(badge.textContent || '0', 10) <= 0; };
+    new MutationObserver(sync).observe(badge, { childList: true, characterData: true, subtree: true });
+    sync();
+  }
+
+  const banner = document.querySelector('#offlineBanner');
+  if (banner) {
+    banner.hidden = true;
+    banner.setAttribute('aria-hidden', 'true');
+  }
+})();
