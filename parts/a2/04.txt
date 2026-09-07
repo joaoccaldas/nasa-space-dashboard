@@ -18,7 +18,7 @@ rl || data.url || data.thumbnail_url) || 'assets/hero-orbit.svg';
       try { const response = await fetchJSON('https://api.spaceflightnewsapi.net/v4/articles/?limit=6'); items = response.results || []; setCache('news', items); }
       catch { items = DATA.fallbackNews; }
     }
-    items ||= DATA.fallbackNews; $('#newsFreshness').textContent = cached ? 'Cached recently' : `Updated ${new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(new Date())}`;
+    items ||= DATA.fallbackNews; $('#newsFreshness').textContent = items === DATA.fallbackNews ? 'Offline fallback · live feed unavailable' : cached ? 'Cached recently' : `Updated ${new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(new Date())}`;
     host.replaceChildren(...items.slice(0, 6).map(item => {
       const article = document.createElement('article'); article.className = 'news-card';
-      article.innerHTML = `<span class="status ${items === DATA.fallbackNews ? 'verified' : 'live'}">${items === DATA.fallbackNews ? 'Official source' : 'Live news'}</span><h3></h3><p></p><div class="news-meta"><span></sp
+      article.innerHTML = `<span class="status ${items === DATA.fallbackNews ? 'verified' : 'live'}">${items === DATA.fallbackNews ? 'Offline source collection' : cached ? 'Cached news' : 'Live news'}</span><h3></h3><p></p><div class="news-meta"><span></sp
