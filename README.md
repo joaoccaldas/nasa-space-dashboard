@@ -32,3 +32,9 @@ Static HTML, CSS and JavaScript, deployable directly through GitHub Pages. No cu
 - `docs/TEST_REPORT.md`
 - `tests/playwright_smoke.py`
 - `tests/layout_audit.py`
+
+## Project context
+
+This is a personal, self-directed learning project by João Caldas. I use projects like CaldaSpace to learn software engineering, product design, data visualization, public-data integration, testing, and AI-assisted development by building real experiences.
+
+AI tools are used extensively during research, design, coding, debugging, testing, and documentation. AI-generated suggestions are treated as inputs to review, not proof of correctness; sourced information, user-facing claims, and important behavior should be validated.
