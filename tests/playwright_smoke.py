@@ -67,7 +67,10 @@ def check(name, condition, detail=''):
     print(('PASS' if condition else 'FAIL'),name,detail)
 
 with sync_playwright() as p:
-    launch_kwargs={'headless':True,'args':['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-breakpad']}\n    if not os.environ.get('CALDASPACE_PLAYWRIGHT_BUNDLED'):\n        launch_kwargs['executable_path']=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium')\n    browser=p.chromium.launch(**launch_kwargs)
+    launch_kwargs={'headless':True,'args':['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-breakpad']}
+    if not os.environ.get('CALDASPACE_PLAYWRIGHT_BUNDLED'):
+        launch_kwargs['executable_path']=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium')
+    browser=p.chromium.launch(**launch_kwargs)
     context=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=1)
     page=context.new_page()
     page.route('https://mock.nasa.test/**',lambda route: route.fulfill(status=200,body=PLACEHOLDER,headers={'Content-Type':'image/svg+xml'}))
