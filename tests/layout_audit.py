@@ -15,7 +15,10 @@ for n in ['logo.svg','hero-orbit.svg','mission-badge.svg']:
     html=html.replace(f'assets/{n}','data:image/svg+xml;charset=utf-8,'+quote((root/'assets'/n).read_text()))
 results=[]
 with sync_playwright() as p:
-    launch_kwargs={'headless':True,'args':['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']}\n    if not os.environ.get('CALDASPACE_PLAYWRIGHT_BUNDLED'):\n        launch_kwargs['executable_path']=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium')\n    browser=p.chromium.launch(**launch_kwargs)
+    launch_kwargs={'headless':True,'args':['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']}
+    if not os.environ.get('CALDASPACE_PLAYWRIGHT_BUNDLED'):
+        launch_kwargs['executable_path']=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium')
+    browser=p.chromium.launch(**launch_kwargs)
     for width,height in [(320,720),(390,844),(768,1024),(1440,1000)]:
         page=browser.new_page(viewport={'width':width,'height':height})
         page.set_content(html,wait_until='domcontentloaded');page.wait_for_timeout(300)
