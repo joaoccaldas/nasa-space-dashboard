@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import quote
 from playwright.sync_api import sync_playwright
-import sys
+import sys, os
 root=Path(__file__).resolve().parents[1]
 ROOT=root
 def join_groups(names):
@@ -15,7 +15,7 @@ for n in ['logo.svg','hero-orbit.svg','mission-badge.svg']:
     html=html.replace(f'assets/{n}','data:image/svg+xml;charset=utf-8,'+quote((root/'assets'/n).read_text()))
 results=[]
 with sync_playwright() as p:
-    browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
+    launch_kwargs={'headless':True,'args':['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']}\n    if not os.environ.get('CALDASPACE_PLAYWRIGHT_BUNDLED'):\n        launch_kwargs['executable_path']=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium')\n    browser=p.chromium.launch(**launch_kwargs)
     for width,height in [(320,720),(390,844),(768,1024),(1440,1000)]:
         page=browser.new_page(viewport={'width':width,'height':height})
         page.set_content(html,wait_until='domcontentloaded');page.wait_for_timeout(300)
