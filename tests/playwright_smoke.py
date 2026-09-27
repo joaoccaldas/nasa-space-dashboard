@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import quote
 from playwright.sync_api import sync_playwright
-import json, sys
+import json, sys, os
 
 ROOT=Path(__file__).resolve().parents[1]
 def join_groups(names):
@@ -67,7 +67,7 @@ def check(name, condition, detail=''):
     print(('PASS' if condition else 'FAIL'),name,detail)
 
 with sync_playwright() as p:
-    browser=p.chromium.launch(headless=True, executable_path='/usr/bin/chromium', args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-breakpad'])
+    launch_kwargs={'headless':True,'args':['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-breakpad']}\n    if not os.environ.get('CALDASPACE_PLAYWRIGHT_BUNDLED'):\n        launch_kwargs['executable_path']=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium')\n    browser=p.chromium.launch(**launch_kwargs)
     context=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=1)
     page=context.new_page()
     page.route('https://mock.nasa.test/**',lambda route: route.fulfill(status=200,body=PLACEHOLDER,headers={'Content-Type':'image/svg+xml'}))
