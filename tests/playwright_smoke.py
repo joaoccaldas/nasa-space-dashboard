@@ -12,7 +12,7 @@ def join_groups(names):
     )
 html='<html><head><link rel="manifest" href="manifest.webmanifest"><style>'+join_groups(['c1','c2','c3'])+'</style></head><body>'+join_groups(['h1','h2'])+'</body></html>'
 data=join_groups(['d1','d2'])
-app=join_groups(['a1','a2','a3','a4'])
+app=(ROOT/'transit-model.js').read_text()+'\n'+join_groups(['a1','a2','a3','a4'])
 css='' 
 for name in ['logo.svg','hero-orbit.svg','mission-badge.svg']:
     svg=(ROOT/'assets'/name).read_text()

@@ -1,13 +1,36 @@
-0; y += 60) { ctx.beginPath(); ctx.moveTo(38, y); ctx.lineTo(w - 28, y); ctx.stroke(); }
-    ctx.strokeStyle = '#72e8ff'; ctx.shadowColor = '#72e8ff'; ctx.shadowBlur = 12; ctx.lineWidth = 5; ctx.beginPath(); transit.points.forEach((y, i) => { const x = 38 + (i / 180) * (w - 66); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.shadowBlur = 0;
-    const cx = 38 + transit.cursor * (w - 66); ctx.strokeStyle = '#ffd67a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, 38); ctx.lineTo(cx, h - 26); ctx.stroke(); ctx.fillStyle = '#ffd67a'; ctx.beginPath(); ctx.arc(cx, transit.points[Math.round(transit.cursor * 180)], 9, 0, Math.PI * 2); ctx.fill();
+    const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#080b22';ctx.fillRect(0,0,w,h);
+    if(!transit.experiment)return;
+    const {samples,parameters:p}=transit.experiment;
+    const left=82,right=w-28,top=140,bottom=h-48;
+    const px=t=>left+t*(right-left),py=f=>top+(1.006-f)/.04*(bottom-top);
+    ctx.font='18px system-ui';ctx.fillStyle='#bac6df';ctx.fillText('Relative brightness',left,122);
+    for(const f of [1,.99,.98,.97]){const y=py(f);ctx.strokeStyle='rgba(255,255,255,.12)';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(`${(f*100).toFixed(0)}%`,12,y+6);}
+    ctx.fillText('Earlier',left,h-14);ctx.fillText('Later',right-46,h-14);
+    ctx.strokeStyle='#72e8ff';ctx.lineWidth=3;ctx.beginPath();samples.forEach((s,i)=>{i?ctx.lineTo(px(s.time),py(s.flux)):ctx.moveTo(px(s.time),py(s.flux));});ctx.stroke();
+    const sample=samples[Math.round(transit.cursor*240)],cx=px(transit.cursor);
+    ctx.strokeStyle='#ffd67a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,top);ctx.lineTo(cx,bottom);ctx.stroke();ctx.fillStyle='#ffd67a';ctx.beginPath();ctx.arc(cx,py(sample.flux),6,0,Math.PI*2);ctx.fill();
+    const starX=w/2,starR=36,planetX=starX+(transit.cursor-p.center)/p.halfDuration*(1+p.radiusRatio)*starR;
+    ctx.fillStyle='#ffd67a';ctx.beginPath();ctx.arc(starX,48,starR,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#435a9b';ctx.beginPath();ctx.arc(planetX,48,starR*p.radiusRatio,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#bac6df';ctx.fillText('One crossing · move through the signal',left,30);
+    canvas.setAttribute('aria-label',`Synthetic brightness curve. Cursor ${(transit.cursor*100).toFixed(0)}% through the observation window; brightness ${(sample.flux*100).toFixed(2)}%. Use arrow keys and Enter.`);
   }
-  function selectTransit() { const ok = Math.abs(transit.cursor - transit.dip) < .06; $('#transitFeedback').textContent = ok ? 'Planet found. That repeating dip is the transit signal.' : 'Not quite. Move toward the deepest dip in the curve.'; if (ok) { profile().transitWins += 1; addXp(30, 'Found a simulated planet'); generateTransit(); } }
-  canvas.onclick = e => { const rect = canvas.getBoundingClientRect(); transit.cursor = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)); drawTransit(); selectTransit(); };
-  canvas.onkeydown = e => { if (e.key === 'ArrowLeft') { e.preventDefault(); transit.cursor = Math.max(0, transit.cursor - .02); drawTransit(); } if (e.key === 'ArrowRight') { e.preventDefault(); transit.cursor = Math.min(1, transit.cursor + .02); drawTransit(); } if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTransit(); } };
-  $('#transitLeft').onclick = () => { transit.cursor = Math.max(0, transit.cursor - .03); drawTransit(); };
-  $('#transitRight').onclick = () => { transit.cursor = Math.min(1, transit.cursor + .03); drawTransit(); };
-  $('#transitSelect').onclick = selectTransit; $('#newTransit').onclick = generateTransit;
+  function selectTransit() {
+    if(!transit.experiment)return;
+    const sample=transit.experiment.samples[Math.round(transit.cursor*240)],r=transit.experiment.parameters.radiusRatio;
+    const ok=1-sample.modelFlux>r*r*.8;
+    $('#transitFeedback').textContent=ok?'You found the crossing. A larger planet blocks more light. This single simulated dip does not establish a real planet or orbital period.':'Try moving toward the broad dip. Noise alone can also make a point look dim.';
+    if(ok&&!transit.won){transit.won=true;profile().transitWins+=1;addXp(30,'Explored a simulated transit');}
+  }
+  canvas.onclick=e=>{const rect=canvas.getBoundingClientRect();const x=(e.clientX-rect.left)/rect.width*canvas.width;transit.cursor=Math.max(0,Math.min(1,(x-82)/(canvas.width-110)));drawTransit();selectTransit();};
+  canvas.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();transit.cursor=Math.max(0,Math.min(1,transit.cursor+(e.key==='ArrowLeft'?-.02:.02)));drawTransit();}if(e.key==='Enter'||e.key===' '){e.preventDefault();selectTransit();}};
+  $('#transitLeft').onclick=()=>{transit.cursor=Math.max(0,transit.cursor-.03);drawTransit();};
+  $('#transitRight').onclick=()=>{transit.cursor=Math.min(1,transit.cursor+.03);drawTransit();};
+  $('#transitSelect').onclick=selectTransit;
+  $('#newTransit').onclick=()=>{$('#transitSeed').value=String((Number($('#transitSeed').value)>>>0)%4294967295+1);generateTransit();};
+  ['planetSize','signalNoise','transitSeed'].forEach(id=>$('#'+id).onchange=generateTransit);
+  $('#transitSeed').oninput=generateTransit;
+  $('#saveTransit').onclick=()=>{if(transit.experiment&&Number($('#transitSeed').value)!==transit.experiment.parameters.seed)generateTransit();if(!transit.experiment)return;const blob=new Blob([JSON.stringify(transit.experiment,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`caldaspace-synthetic-transit-${transit.experiment.parameters.seed}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
   function missionOfDay() { return DATA.missions[Math.abs([...DAY].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) % DATA.missions.length]; }
   function renderMission() {

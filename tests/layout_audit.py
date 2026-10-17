@@ -10,7 +10,7 @@ def join_groups(names):
         for name in names
         for file in sorted((ROOT/'parts'/name).glob('*.txt'))
     )
-css=join_groups(['c1','c2','c3']); body=join_groups(['h1','h2']); data=join_groups(['d1','d2']); app=join_groups(['a1','a2','a3','a4']); html=f'<html><head><style>{css}</style></head><body>{body}<script>{data}</script><script>{app}</script></body></html>'
+css=join_groups(['c1','c2','c3']); body=join_groups(['h1','h2']); data=join_groups(['d1','d2']); app=(ROOT/'transit-model.js').read_text()+'\n'+join_groups(['a1','a2','a3','a4']); html=f'<html><head><style>{css}</style></head><body>{body}<script>{data}</script><script>{app}</script></body></html>'
 for n in ['logo.svg','hero-orbit.svg','mission-badge.svg']:
     html=html.replace(f'assets/{n}','data:image/svg+xml;charset=utf-8,'+quote((root/'assets'/n).read_text()))
 results=[]

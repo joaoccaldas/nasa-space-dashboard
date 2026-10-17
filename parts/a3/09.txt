@@ -10,7 +10,14 @@ approach.close_approach_date) : 'Date unavailable'; $('p', article).textContent 
   }
 
   const canvas = $('#transitCanvas'); const ctx = canvas.getContext('2d'); let transit = { dip: .55, cursor: .5, points: [] };
-  function generateTransit() { transit.dip = .2 + Math.random() * .6; transit.cursor = .5; transit.points = Array.from({ length: 181 }, (_, i) => { const x = i / 180; return 154 + Math.sin(i * .23) * 4 + (Math.random() - .5) * 8 + Math.exp(-Math.pow((x - transit.dip) / .035, 2)) * 104; }); drawTransit(); $('#transitFeedback').textContent = 'Find the most likely transit.'; }
+  function generateTransit() {
+    try {
+      transit.experiment = window.CaldaTransit.experiment({seed:Number($('#transitSeed').value),radiusRatio:Number($('#planetSize').value),noise:Number($('#signalNoise').value)});
+      $('#saveTransit').disabled=false;
+      transit.dip=transit.experiment.parameters.center; transit.cursor=.5; transit.won=false;
+      $('#transitFeedback').textContent='Find where the planet crosses the star. Change its size to compare the same signal.';
+      $('#transitReadout').textContent=`Model depth ${(100*transit.experiment.parameters.radiusRatio**2).toFixed(2)}% · seed ${transit.experiment.parameters.seed} · synthetic data`;
+      drawTransit();
+    } catch { transit.experiment=null;$('#saveTransit').disabled=true;$('#transitReadout').textContent='No experiment generated';drawTransit();$('#transitFeedback').textContent='Use a whole-number seed from 1 to 4294967295.'; }
+  }
   function drawTransit() {
-    const w = canvas.width, h = canvas.height; ctx.clearRect(0, 0, w, h); const grad = ctx.createLinearGradient(0, 0, w, h); grad.addColorStop(0, '#080b22'); grad.addColorStop(1, '#10153a'); ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; for (let y = 60; y < h - 3
