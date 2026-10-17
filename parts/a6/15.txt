@@ -23,7 +23,8 @@
       controls.innerHTML=`<label>Rover<select id="roverName"><option value="Perseverance Mars rover">Perseverance</option><option value="Curiosity Mars rover">Curiosity</option><option value="Opportunity Mars rover">Opportunity</option><option value="Spirit Mars rover">Spirit</option></select></label><label>Results<select id="roverCount"><option>8</option><option>12</option><option>16</option></select></label><button class="button primary" id="roverLaunch">Open rover gallery</button>`;
       controls.querySelector('#roverLaunch').onclick=loadRover;
     }else{
-      controls.innerHTML=`<label style="grid-column:1/-1">NASA API key<input id="nasaKeyInput" autocomplete="off" value="${currentKey()==='DEMO_KEY'?'':currentKey()}" placeholder="Leave empty to use DEMO_KEY"></label><button class="button primary" id="saveNasaKey">Save locally</button>`;
+      controls.innerHTML=`<label style="grid-column:1/-1">NASA API key<input id="nasaKeyInput" type="password" autocomplete="off" placeholder="Leave empty to use DEMO_KEY"></label><button class="button primary" id="saveNasaKey">Save locally</button>`;
+      controls.querySelector('#nasaKeyInput').value=currentKey()==='DEMO_KEY'?'':currentKey();
       controls.querySelector('#saveNasaKey').onclick=()=>{const value=controls.querySelector('#nasaKeyInput').value.trim();try{if(value)localStorage.setItem('caldaspace-nasa-key',value);else localStorage.removeItem('caldaspace-nasa-key')}catch{}result.innerHTML='<div class="archive-empty">API key saved only in this browser.</div>';};
     }
   }
