@@ -29,7 +29,8 @@
   $('#transitSelect').onclick=selectTransit;
   $('#newTransit').onclick=()=>{$('#transitSeed').value=String((Number($('#transitSeed').value)>>>0)%4294967295+1);generateTransit();};
   ['planetSize','signalNoise','transitSeed'].forEach(id=>$('#'+id).onchange=generateTransit);
-  $('#saveTransit').onclick=()=>{if(!transit.experiment)return;const blob=new Blob([JSON.stringify(transit.experiment,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`caldaspace-synthetic-transit-${transit.experiment.parameters.seed}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+  $('#transitSeed').oninput=generateTransit;
+  $('#saveTransit').onclick=()=>{if(transit.experiment&&Number($('#transitSeed').value)!==transit.experiment.parameters.seed)generateTransit();if(!transit.experiment)return;const blob=new Blob([JSON.stringify(transit.experiment,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`caldaspace-synthetic-transit-${transit.experiment.parameters.seed}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
   function missionOfDay() { return DATA.missions[Math.abs([...DAY].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) % DATA.missions.length]; }
   function renderMission() {
